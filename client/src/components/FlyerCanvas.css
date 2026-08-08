@@ -1,6 +1,7 @@
 .flyer {
   --white: #ffffff;
   width: min(720px, 94vw);
+  max-width: 100%;
   aspect-ratio: 210 / 297;
   background: var(--bg);
   color: var(--white);

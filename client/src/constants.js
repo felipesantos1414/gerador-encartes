@@ -16,3 +16,12 @@ export const currencyFormatter = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
   currency: 'BRL',
 })
+
+const shortDateFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' })
+
+export function formatValidityRange(validFrom, validUntil) {
+  if (!validFrom || !validUntil) return ''
+  const from = shortDateFormatter.format(new Date(`${validFrom}T00:00:00`))
+  const until = shortDateFormatter.format(new Date(`${validUntil}T00:00:00`))
+  return `Ofertas válidas de ${from} à ${until}`
+}

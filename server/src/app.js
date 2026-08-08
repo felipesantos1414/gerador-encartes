@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import healthRouter from './routes/health.js';
 import productsRouter from './routes/products.js';
 import uploadRouter from './routes/upload.js';
+import flyersRouter from './routes/flyers.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -18,6 +19,7 @@ export function createApp() {
   app.use('/api/health', healthRouter);
   app.use('/api/products', productsRouter);
   app.use('/api/upload', uploadRouter);
+  app.use('/api/flyers', flyersRouter);
 
   app.use((req, res) => {
     res.status(404).json({ error: 'Not found' });
