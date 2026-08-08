@@ -12,9 +12,9 @@ function buildRows(items, grid, maxProducts) {
   let i = 0
   let isFirstRow = true
   while (i < capped.length) {
-    const size = isFirstRow ? grid.row1 : grid.rowRest
-    rows.push(capped.slice(i, i + size))
-    i += size
+    const columns = isFirstRow ? grid.row1 : grid.rowRest
+    rows.push({ items: capped.slice(i, i + columns), columns })
+    i += columns
     isFirstRow = false
   }
   return rows
@@ -53,9 +53,12 @@ const FlyerCanvas = forwardRef(function FlyerCanvas({ theme, storeName, validity
           <div
             key={rowIndex}
             className="row"
-            style={{ gridTemplateColumns: `repeat(${row.length}, 1fr)` }}
+            style={{
+              gridTemplateColumns: `repeat(${row.items.length}, 1fr)`,
+              width: `${(row.items.length / row.columns) * 100}%`,
+            }}
           >
-            {row.map((item, itemIndex) => (
+            {row.items.map((item, itemIndex) => (
               <div className="product" key={item.id ?? itemIndex}>
                 <div className="name">{item.name}</div>
                 {item.imageUrl ? (
