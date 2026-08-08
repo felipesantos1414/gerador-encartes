@@ -19,9 +19,15 @@ export const currencyFormatter = new Intl.NumberFormat('pt-BR', {
 
 const shortDateFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' })
 
+function formatLocalDate(value) {
+  // Accepts a "YYYY-MM-DD" date-input value or a full ISO datetime from the
+  // API. Only the calendar date matters here, so the time is normalized to
+  // local midnight to avoid UTC-offset day shifts near midnight.
+  const datePart = String(value).slice(0, 10)
+  return shortDateFormatter.format(new Date(`${datePart}T00:00:00`))
+}
+
 export function formatValidityRange(validFrom, validUntil) {
   if (!validFrom || !validUntil) return ''
-  const from = shortDateFormatter.format(new Date(`${validFrom}T00:00:00`))
-  const until = shortDateFormatter.format(new Date(`${validUntil}T00:00:00`))
-  return `Ofertas válidas de ${from} à ${until}`
+  return `Ofertas válidas de ${formatLocalDate(validFrom)} à ${formatLocalDate(validUntil)}`
 }

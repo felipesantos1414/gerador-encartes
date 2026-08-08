@@ -1,3 +1,4 @@
+import { forwardRef } from 'react'
 import './FlyerCanvas.css'
 
 const priceFormatter = new Intl.NumberFormat('pt-BR', {
@@ -19,11 +20,12 @@ function buildRows(items, grid, maxProducts) {
   return rows
 }
 
-function FlyerCanvas({ theme, storeName, validityText, items }) {
+const FlyerCanvas = forwardRef(function FlyerCanvas({ theme, storeName, validityText, items }, ref) {
   const rows = buildRows(items, theme.grid, theme.maxProducts)
 
   return (
     <div
+      ref={ref}
       className="flyer"
       style={{
         '--bg': theme.colors.background,
@@ -57,7 +59,7 @@ function FlyerCanvas({ theme, storeName, validityText, items }) {
               <div className="product" key={item.id ?? itemIndex}>
                 <div className="name">{item.name}</div>
                 {item.imageUrl ? (
-                  <img className="img-photo" src={item.imageUrl} alt={item.name} />
+                  <img className="img-photo" src={item.imageUrl} alt={item.name} crossOrigin="anonymous" />
                 ) : (
                   <div className="img">🛒</div>
                 )}
@@ -74,6 +76,6 @@ function FlyerCanvas({ theme, storeName, validityText, items }) {
       <footer className="footer">{theme.footerText}</footer>
     </div>
   )
-}
+})
 
 export default FlyerCanvas

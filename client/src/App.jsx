@@ -1,14 +1,27 @@
 import { useState } from 'react'
 import ProdutosPage from './pages/ProdutosPage'
 import NovoEncartePage from './pages/NovoEncartePage'
+import MeusEncartesPage from './pages/MeusEncartesPage'
+import PreviewExportPage from './pages/PreviewExportPage'
 
 const TABS = [
   { id: 'produtos', label: 'Produtos' },
   { id: 'novo-encarte', label: 'Novo Encarte' },
+  { id: 'meus-encartes', label: 'Meus Encartes' },
 ]
 
 function App() {
-  const [tab, setTab] = useState('produtos')
+  const [screen, setScreen] = useState({ name: 'produtos' })
+
+  function goToTab(tabId) {
+    setScreen({ name: tabId })
+  }
+
+  function goToPreview(flyerId) {
+    setScreen({ name: 'preview', flyerId })
+  }
+
+  const activeTab = screen.name === 'preview' ? 'meus-encartes' : screen.name
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -19,9 +32,9 @@ function App() {
             <button
               key={t.id}
               type="button"
-              onClick={() => setTab(t.id)}
+              onClick={() => goToTab(t.id)}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
-                tab === t.id ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+                activeTab === t.id ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
               {t.label}
@@ -30,8 +43,12 @@ function App() {
         </nav>
       </header>
 
-      {tab === 'produtos' && <ProdutosPage />}
-      {tab === 'novo-encarte' && <NovoEncartePage />}
+      {screen.name === 'produtos' && <ProdutosPage />}
+      {screen.name === 'novo-encarte' && <NovoEncartePage onSaved={goToPreview} />}
+      {screen.name === 'meus-encartes' && <MeusEncartesPage onOpen={goToPreview} />}
+      {screen.name === 'preview' && (
+        <PreviewExportPage flyerId={screen.flyerId} onBack={() => goToTab('meus-encartes')} />
+      )}
     </div>
   )
 }

@@ -11,14 +11,13 @@ const STEPS = ['Tema', 'Produtos', 'Dados']
 
 const emptyDados = { title: '', storeName: '', validFrom: '', validUntil: '' }
 
-function NovoEncartePage() {
+function NovoEncartePage({ onSaved }) {
   const [step, setStep] = useState(1)
   const [themeId, setThemeId] = useState(defaultTheme.id)
   const [selectedItems, setSelectedItems] = useState([])
   const [dados, setDados] = useState(emptyDados)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [savedId, setSavedId] = useState(null)
 
   const theme = themes[themeId] || defaultTheme
 
@@ -78,39 +77,12 @@ function NovoEncartePage() {
             : undefined,
         })),
       })
-      setSavedId(flyer._id)
+      onSaved(flyer._id)
     } catch (err) {
       setError(err.message)
     } finally {
       setSaving(false)
     }
-  }
-
-  function resetWizard() {
-    setStep(1)
-    setThemeId(defaultTheme.id)
-    setSelectedItems([])
-    setDados(emptyDados)
-    setSavedId(null)
-    setError('')
-  }
-
-  if (savedId) {
-    return (
-      <div className="mx-auto max-w-md px-4 py-10 text-center">
-        <h2 className="mb-2 text-xl font-bold text-slate-800">Encarte salvo!</h2>
-        <p className="mb-4 text-sm text-slate-500">
-          Seu encarte foi salvo com sucesso. O export em PDF/PNG chega na próxima fase.
-        </p>
-        <button
-          type="button"
-          onClick={resetWizard}
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
-        >
-          Criar outro encarte
-        </button>
-      </div>
-    )
   }
 
   return (
