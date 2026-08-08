@@ -1,0 +1,155 @@
+.flyer {
+  --white: #ffffff;
+  width: min(720px, 94vw);
+  aspect-ratio: 210 / 297;
+  background: var(--bg);
+  color: var(--white);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 6px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+}
+
+.flyer .header {
+  background: var(--header-bg);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 14px 14px;
+  padding: 3.2% 4% 2.6%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2%;
+}
+
+.flyer .headline {
+  line-height: 0.92;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.flyer .headline .l1 {
+  font-size: clamp(28px, 6.2vw, 54px);
+  letter-spacing: 0.01em;
+}
+.flyer .headline .l2 {
+  font-size: clamp(24px, 5.2vw, 46px);
+  color: transparent;
+  -webkit-text-stroke: 2px var(--white);
+  letter-spacing: 0.06em;
+}
+
+.flyer .brand {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.flyer .brand .store {
+  font-weight: 900;
+  font-size: clamp(15px, 2.6vw, 24px);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.flyer .brand .badge {
+  background: var(--tag);
+  color: var(--white);
+  font-weight: 800;
+  font-size: clamp(8px, 1.4vw, 12px);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+.flyer .brand .validity {
+  font-weight: 800;
+  font-size: clamp(10px, 1.9vw, 17px);
+}
+
+.flyer .divider {
+  height: 5px;
+  background: var(--white);
+  box-shadow: 0 0 14px 3px rgba(255, 255, 255, 0.85);
+}
+
+.flyer .grid {
+  flex: 1;
+  padding: 4% 4% 2%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+.flyer .row {
+  display: grid;
+  gap: 3%;
+}
+
+.flyer .product {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.flyer .product .name {
+  font-weight: 800;
+  font-size: clamp(11px, 2vw, 19px);
+  margin-bottom: 4%;
+  line-height: 1.15;
+}
+.flyer .product .img {
+  font-size: clamp(40px, 8.5vw, 84px);
+  line-height: 1;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+}
+.flyer .product .img-photo {
+  width: clamp(40px, 8.5vw, 84px);
+  height: clamp(40px, 8.5vw, 84px);
+  object-fit: cover;
+  border-radius: 8px;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+}
+
+.flyer .price {
+  position: relative;
+  margin-top: -8%;
+  background: var(--tag);
+  color: var(--white);
+  padding: 3% 14% 4%;
+  border-radius: 8px;
+  font-weight: 900;
+  font-size: clamp(16px, 3.4vw, 32px);
+  line-height: 1;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+.flyer .price::before,
+.flyer .price::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  background: var(--bg);
+  border-radius: 50%;
+  transform: translateY(-50%);
+}
+.flyer .price::before {
+  left: -6px;
+}
+.flyer .price::after {
+  right: -6px;
+}
+.flyer .price .unit {
+  display: block;
+  text-align: right;
+  font-size: 0.42em;
+  font-weight: 800;
+  margin-top: 2px;
+}
+
+.flyer .footer {
+  background: var(--footer-bg);
+  padding: 2.4% 4%;
+  text-align: center;
+  font-weight: 800;
+  font-size: clamp(11px, 1.9vw, 17px);
+}
