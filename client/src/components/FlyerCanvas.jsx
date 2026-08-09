@@ -61,14 +61,16 @@ const FlyerCanvas = forwardRef(function FlyerCanvas({ theme, storeName, validity
             {row.items.map((item, itemIndex) => (
               <div className="product" key={item.id ?? itemIndex}>
                 <div className="name">{item.name}</div>
-                {item.imageUrl ? (
-                  <img className="img-photo" src={item.imageUrl} alt={item.name} crossOrigin="anonymous" />
-                ) : (
-                  <div className="img">🛒</div>
-                )}
-                <div className="price">
-                  {priceFormatter.format(item.price)}
-                  <span className="unit">{item.unit}</span>
+                <div className="img-wrap">
+                  <div className="price">
+                    {priceFormatter.format(item.price)}
+                    <span className="unit">{item.unit}</span>
+                  </div>
+                  {item.imageUrl ? (
+                    <img className="img-photo" src={item.imageUrl} alt={item.name} crossOrigin="anonymous" />
+                  ) : (
+                    <div className="img">🛒</div>
+                  )}
                 </div>
               </div>
             ))}
