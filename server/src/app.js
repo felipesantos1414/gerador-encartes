@@ -12,6 +12,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export function createApp() {
   const app = express();
 
+  // Render (and most PaaS hosts) terminate TLS at a proxy and forward over
+  // HTTP internally; without this, req.protocol always reports 'http', so
+  // upload.js would generate http:// image URLs on an https:// site.
+  app.set('trust proxy', 1);
+
   app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
   app.use(express.json());
   app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
