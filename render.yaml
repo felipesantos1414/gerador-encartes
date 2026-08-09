@@ -14,10 +14,8 @@ services:
       - key: BASE_URL
         sync: false
 
-  - type: web
+  - type: static
     name: encartes-client
-    env: static
-    plan: free
     rootDir: client
     buildCommand: npm install && npm run build
     staticPublishPath: dist
