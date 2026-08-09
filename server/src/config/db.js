@@ -8,11 +8,15 @@ export async function connectDB() {
     return;
   }
 
+  mongoose.connection.on('error', (err) => {
+    console.error('MongoDB connection error:', err);
+  });
+
   try {
     await mongoose.connect(uri);
     console.log('MongoDB connected');
   } catch (err) {
-    console.error('MongoDB connection error:', err.message);
+    console.error('MongoDB connection error:', err);
   }
 }
 
