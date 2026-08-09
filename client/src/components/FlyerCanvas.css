@@ -103,24 +103,18 @@
   line-height: 1.15;
 }
 
-/* img-wrap holds the image and the overlapping price tag. The price tag is
-   painted before the image (DOM order) and given extra top padding equal to
-   the overlap amount: html2canvas clips the overlapped region away from
-   whichever sibling paints first, so the image (painted last) stays intact
-   and the price tag only sacrifices padding, never its text. */
-.flyer .product .img-wrap {
-  position: relative;
-  width: 100%;
-  height: var(--img-size);
-}
+/* html2canvas clips the overlapped region away from whichever element paints
+   first in DOM order whenever two elements' boxes overlap on screen - and
+   the clipped amount doesn't reliably scale with (or even track) the size
+   of the overlap (it varied between ~0 and ~9px across visually-identical
+   siblings in the same row using the same CSS). Rather than fight an
+   unpredictable bug, the image and price tag are laid out in normal
+   document flow with no overlap at all: nothing to clip, nothing to
+   mis-render. */
 .flyer .product .img-fallback-wrap,
 .flyer .product .img-photo {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
   width: var(--img-size);
-  height: 100%;
+  aspect-ratio: 1;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
 }
 .flyer .product .img-photo {
@@ -136,17 +130,11 @@
 }
 
 .flyer .price {
-  position: absolute;
-  top: 78%;
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
+  position: relative;
+  margin-top: 6%;
   background: var(--tag);
   color: var(--white);
-  padding-top: calc(var(--img-size) * 0.22);
-  padding-right: 14%;
-  padding-bottom: 4%;
-  padding-left: 14%;
+  padding: 3% 14% 4%;
   border-radius: 8px;
   font-weight: 900;
   font-size: clamp(16px, 3.4cqw, 32px);

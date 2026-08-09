@@ -61,36 +61,34 @@ const FlyerCanvas = forwardRef(function FlyerCanvas({ theme, storeName, validity
             {row.items.map((item, itemIndex) => (
               <div className="product" key={item.id ?? itemIndex}>
                 <div className="name">{item.name}</div>
-                <div className="img-wrap">
-                  <div className="price">
-                    {priceFormatter.format(item.price)}
-                    <span className="unit">{item.unit}</span>
+                {item.imageUrl ? (
+                  <img className="img-photo" src={item.imageUrl} alt={item.name} crossOrigin="anonymous" />
+                ) : (
+                  <div className="img-fallback-wrap">
+                    <svg
+                      className="img-fallback"
+                      width="100%"
+                      height="100%"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M2 3h2l1.2 4h13.6l-1.8 8H7.4L6.4 8"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <circle cx="9.5" cy="19" r="1.4" fill="currentColor" />
+                      <circle cx="16.5" cy="19" r="1.4" fill="currentColor" />
+                    </svg>
                   </div>
-                  {item.imageUrl ? (
-                    <img className="img-photo" src={item.imageUrl} alt={item.name} crossOrigin="anonymous" />
-                  ) : (
-                    <div className="img-fallback-wrap">
-                      <svg
-                        className="img-fallback"
-                        width="100%"
-                        height="100%"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M2 3h2l1.2 4h13.6l-1.8 8H7.4L6.4 8"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.8"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <circle cx="9.5" cy="19" r="1.4" fill="currentColor" />
-                        <circle cx="16.5" cy="19" r="1.4" fill="currentColor" />
-                      </svg>
-                    </div>
-                  )}
+                )}
+                <div className="price">
+                  {priceFormatter.format(item.price)}
+                  <span className="unit">{item.unit}</span>
                 </div>
               </div>
             ))}
