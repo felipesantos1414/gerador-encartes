@@ -113,7 +113,7 @@
   width: 100%;
   height: var(--img-size);
 }
-.flyer .product .img,
+.flyer .product .img-fallback-wrap,
 .flyer .product .img-photo {
   position: absolute;
   top: 0;
@@ -121,19 +121,18 @@
   transform: translateX(-50%);
   width: var(--img-size);
   height: 100%;
-}
-.flyer .product .img {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--img-size);
-  line-height: 1;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
 }
 .flyer .product .img-photo {
   object-fit: cover;
   border-radius: 8px;
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+}
+/* html2canvas does not correctly resolve a CSS custom property for an SVG's
+   own width, so the SVG is sized with a plain 100%/100% against this
+   dedicated, already-sized wrapper instead of sizing the SVG directly. */
+.flyer .product .img-fallback {
+  width: 100%;
+  height: 100%;
 }
 
 .flyer .price {
