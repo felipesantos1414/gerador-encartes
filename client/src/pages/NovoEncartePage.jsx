@@ -160,6 +160,7 @@ function NovoEncartePage({ onSaved }) {
         <div className="flex justify-center md:sticky md:top-6 md:w-[360px] md:shrink-0">
           <FlyerCanvas
             theme={theme}
+            title={dados.title}
             storeName={dados.storeName || 'Seu Mercado'}
             validityText={validityText || 'Defina o período de validade'}
             items={previewItems}

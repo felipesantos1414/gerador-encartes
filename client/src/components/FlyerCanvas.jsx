@@ -1,4 +1,5 @@
 import { forwardRef } from 'react'
+import { splitHeadline } from '../constants'
 import './FlyerCanvas.css'
 
 const priceFormatter = new Intl.NumberFormat('pt-BR', {
@@ -20,8 +21,10 @@ function buildRows(items, grid, maxProducts) {
   return rows
 }
 
-const FlyerCanvas = forwardRef(function FlyerCanvas({ theme, storeName, validityText, items }, ref) {
+const FlyerCanvas = forwardRef(function FlyerCanvas({ theme, title, storeName, validityText, items }, ref) {
   const rows = buildRows(items, theme.grid, theme.maxProducts)
+  const { l1, l2 } = splitHeadline(title)
+  const isLogoHeader = theme.headerVariant === 'logo'
 
   return (
     <div
@@ -35,17 +38,35 @@ const FlyerCanvas = forwardRef(function FlyerCanvas({ theme, storeName, validity
         fontFamily: theme.font,
       }}
     >
-      <header className="header">
-        <div className="headline">
-          <div className="l1">{theme.headline.l1}</div>
-          <div className="l2">{theme.headline.l2}</div>
+      <div className="header-zone">
+        {/* header-bg is a shorter rectangle than header-zone for the "logo"
+            variant, so the mascot's lower body reveals the flyer's own body
+            color instead of the header color - see the CSS comment on
+            .header-bg-reveal for why this avoids overlapping DOM siblings. */}
+        <div className={`header-bg ${isLogoHeader ? 'header-bg-reveal' : ''}`} />
+        <div className="header-content">
+          <div className="headline">
+            <div className="l1">{l1}</div>
+            <div className="l2">{l2}</div>
+          </div>
+
+          {isLogoHeader ? (
+            <div className="brand brand-logo">
+              <img className="mascot" src={theme.mascotUrl} alt="" crossOrigin="anonymous" />
+              <div className="logo-stack">
+                <img className="logo-img" src={theme.logoUrl} alt={theme.name} crossOrigin="anonymous" />
+                <div className="validity">{validityText}</div>
+              </div>
+            </div>
+          ) : (
+            <div className="brand">
+              <div className="store">{storeName}</div>
+              <div className="badge">{theme.badgeText}</div>
+              <div className="validity">{validityText}</div>
+            </div>
+          )}
         </div>
-        <div className="brand">
-          <div className="store">{storeName}</div>
-          <div className="badge">{theme.badgeText}</div>
-          <div className="validity">{validityText}</div>
-        </div>
-      </header>
+      </div>
       <div className="divider" />
 
       <main className="grid">

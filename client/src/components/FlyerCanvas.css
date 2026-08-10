@@ -13,10 +13,33 @@
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
 }
 
-.flyer .header {
+/* header-zone/header-bg/header-content split: header-bg is a background
+   layer sized independently of header-content's own (taller, when the
+   mascot is present) height. This keeps the mascot's "overlap" effect
+   entirely inside header-zone's own box - nothing here ever extends past
+   header-zone into .divider/.grid, so there are no overlapping DOM
+   siblings at the .flyer level for html2canvas to inconsistently clip
+   (see the comment on .product .img-photo below for why that matters). */
+.flyer .header-zone {
+  position: relative;
+}
+.flyer .header-bg {
+  position: absolute;
+  inset: 0;
   background: var(--header-bg);
   background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
   background-size: 14px 14px;
+}
+/* Shorter than header-zone so the mascot's lower body, which extends past
+   header-content's "text" height, reveals the flyer's own body color (the
+   flyer background and this theme's body color are the same royal blue by
+   design) instead of the header color - a two-tone "standing in front of
+   the header" illusion with no element actually overlapping a sibling. */
+.flyer .header-bg-reveal {
+  height: 68%;
+}
+.flyer .header-content {
+  position: relative;
   padding: 3.2% 4% 2.6%;
   display: flex;
   justify-content: space-between;
@@ -66,6 +89,27 @@
 .flyer .brand .validity {
   font-weight: 800;
   font-size: clamp(10px, 1.9cqw, 17px);
+}
+
+.flyer .brand-logo {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 3%;
+}
+.flyer .brand-logo .mascot {
+  width: 20cqw;
+  height: auto;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+}
+.flyer .brand-logo .logo-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.flyer .brand-logo .logo-img {
+  width: 30cqw;
+  height: auto;
 }
 
 .flyer .divider {

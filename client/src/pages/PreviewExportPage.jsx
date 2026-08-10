@@ -58,6 +58,7 @@ function PreviewExportPage({ flyerId, onBack }) {
             <FlyerCanvas
               ref={flyerRef}
               theme={themes[flyer.themeId] || defaultTheme}
+              title={flyer.title}
               storeName={flyer.storeName}
               validityText={formatValidityRange(flyer.validFrom, flyer.validUntil)}
               items={flyer.items.map((item) => ({

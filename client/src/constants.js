@@ -31,3 +31,16 @@ export function formatValidityRange(validFrom, validUntil) {
   if (!validFrom || !validUntil) return ''
   return `Ofertas válidas de ${formatLocalDate(validFrom)} à ${formatLocalDate(validUntil)}`
 }
+
+const DEFAULT_HEADLINE = 'Ofertas da Semana'
+
+// Splits a flyer title into the two headline lines used by FlyerCanvas: the
+// last word goes on line 2 (outlined), everything before it on line 1
+// (solid) - e.g. "Mega Ofertas" -> "Mega" / "Ofertas",
+// "Quarta de Ofertas" -> "Quarta de" / "Ofertas".
+export function splitHeadline(title) {
+  const trimmed = (title || DEFAULT_HEADLINE).trim()
+  const lastSpace = trimmed.lastIndexOf(' ')
+  if (lastSpace === -1) return { l1: '', l2: trimmed }
+  return { l1: trimmed.slice(0, lastSpace), l2: trimmed.slice(lastSpace + 1) }
+}
