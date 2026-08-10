@@ -47,7 +47,7 @@ Nada além disso entra antes.
 | Backend   | Node.js + Express | API REST |
 | Banco     | MongoDB Atlas (free tier) + Mongoose | |
 | Export    | html2canvas + jsPDF (client-side) | O encarte é renderizado como HTML/CSS e capturado |
-| Upload de imagem | Multer + armazenamento local no MVP; migrar p/ Cloudinary free tier na Fase 5 | |
+| Upload de imagem | Multer + Cloudinary (free tier) | Migrado do armazenamento local antes do previsto — o disco do Render é efêmero |
 | Deploy    | Render (web service + static site) | |
 
 Justificativa do export client-side: evita Puppeteer no servidor (pesado no
@@ -142,7 +142,7 @@ DELETE /api/flyers/:id        remove
 
 ### Fase 5+ — Diferenciais
 Remoção de fundo (@imgly/background-removal), temas sazonais, 2 páginas,
-Cloudinary, textos com Claude API, compartilhamento social.
+textos com Claude API, compartilhamento social.
 
 ---
 

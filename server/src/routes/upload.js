@@ -1,23 +1,9 @@
 import { Router } from 'express';
 import multer from 'multer';
-import path from 'node:path';
-import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadsDir = path.join(__dirname, '../../uploads');
-fs.mkdirSync(uploadsDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadsDir),
-  filename: (req, file, cb) => {
-    const suffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    cb(null, `${suffix}${path.extname(file.originalname)}`);
-  },
-});
+import cloudinary from '../config/cloudinary.js';
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith('image/')) {
@@ -27,12 +13,28 @@ const upload = multer({
   },
 });
 
+function uploadBuffer(buffer) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: 'encartes', resource_type: 'image' },
+      (err, result) => (err ? reject(err) : resolve(result)),
+    );
+    stream.end(buffer);
+  });
+}
+
 const router = Router();
 
-router.post('/', upload.single('image'), (req, res) => {
+router.post('/', upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No image file provided' });
-  const base = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
-  res.status(201).json({ data: { url: `${base}/uploads/${req.file.filename}` } });
+
+  try {
+    const result = await uploadBuffer(req.file.buffer);
+    res.status(201).json({ data: { url: result.secure_url } });
+  } catch (err) {
+    console.error('Cloudinary upload error:', err);
+    res.status(502).json({ error: 'Image upload failed' });
+  }
 });
 
 router.use((err, req, res, next) => {

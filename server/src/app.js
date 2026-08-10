@@ -1,25 +1,20 @@
 import express from 'express';
 import cors from 'cors';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import healthRouter from './routes/health.js';
 import productsRouter from './routes/products.js';
 import uploadRouter from './routes/upload.js';
 import flyersRouter from './routes/flyers.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
 export function createApp() {
   const app = express();
 
   // Render (and most PaaS hosts) terminate TLS at a proxy and forward over
-  // HTTP internally; without this, req.protocol always reports 'http', so
-  // upload.js would generate http:// image URLs on an https:// site.
+  // HTTP internally; without this, req.protocol/req.secure and X-Forwarded-*
+  // headers aren't trusted, which can throw off IP-based logging/limiting.
   app.set('trust proxy', 1);
 
   app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
   app.use(express.json());
-  app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
   app.use('/api/health', healthRouter);
   app.use('/api/products', productsRouter);

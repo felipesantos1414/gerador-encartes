@@ -28,7 +28,7 @@ and export it as a print-ready PDF or PNG.
 | Backend | Node.js + Express + Mongoose |
 | Database | MongoDB Atlas (free tier) |
 | Export | html2canvas + jsPDF, rendered entirely in the browser |
-| Image upload | Multer (local disk storage in the MVP) |
+| Image upload | Multer + Cloudinary (free tier) |
 | Deploy | Render (web service + static site) |
 
 ## Architecture decisions
@@ -44,12 +44,11 @@ and export it as a print-ready PDF or PNG.
 - **Single-tenant, no auth.** The MVP is built for one store; the `storeName`
   is just a field on each flyer, not an account. Multi-tenant auth is
   explicitly out of scope until a later phase.
-- **Local disk storage for uploads, not Cloudinary — for now.** This keeps
-  the MVP simple, but it's a real limitation on Render's free tier: the
-  filesystem is ephemeral, so **uploaded product photos are lost on every
-  redeploy or restart**. Migrating to Cloudinary is planned (see Roadmap)
-  and is the main thing to fix before this app is used for real, ongoing
-  operation rather than a demo.
+- **Cloudinary for uploads, not local disk.** Render's free tier filesystem
+  is ephemeral (wiped on every redeploy or restart), so product photos are
+  uploaded via Multer's in-memory storage and streamed straight to
+  Cloudinary rather than written to disk — `server/src/routes/upload.js`
+  never touches the filesystem.
 - **Product cell sizing is capped to the theme's designed column count**
   (`client/src/components/FlyerCanvas.jsx`), not stretched to fill a row
   with fewer items — so a flyer with 1–3 products looks like a smaller,
@@ -122,7 +121,13 @@ Blueprint schema has changed since this was written.
    approach for PaaS deployments.
 4. Copy the connection string (`mongodb+srv://...`) for use below.
 
-### 2. Server (Render Web Service)
+### 2. Cloudinary
+
+1. Create a free account at [cloudinary.com](https://cloudinary.com/users/register/free).
+2. On the dashboard, copy the **Cloud name**, **API Key**, and **API Secret**
+   for use below.
+
+### 3. Server (Render Web Service)
 
 1. In Render, **New +** → **Web Service**, connect this GitHub repo.
 2. **Root Directory:** `server`
@@ -131,23 +136,22 @@ Blueprint schema has changed since this was written.
 5. Environment variables:
    - `MONGODB_URI` — the Atlas connection string from step 1
    - `CLIENT_URL` — the client's Render URL (add this *after* deploying the
-     client in step 3, then redeploy the server)
-   - `BASE_URL` — the server's own Render URL, e.g.
-     `https://encartes-server.onrender.com` (needed so uploaded image links
-     are generated correctly)
+     client in step 4, then redeploy the server)
+   - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+     — from step 2
 
-### 3. Client (Render Static Site)
+### 4. Client (Render Static Site)
 
 1. **New +** → **Static Site**, same repo.
 2. **Root Directory:** `client`
 3. **Build Command:** `npm install && npm run build`
 4. **Publish Directory:** `dist`
 5. Environment variable:
-   - `VITE_API_URL` — the server's URL from step 2, with `/api` appended,
+   - `VITE_API_URL` — the server's URL from step 3, with `/api` appended,
      e.g. `https://encartes-server.onrender.com/api` (Vite bakes this in at
      build time, so set it *before* the first build)
 
-### 4. Wire them together
+### 5. Wire them together
 
 Once both services have URLs, set `CLIENT_URL` on the server to the client's
 URL and redeploy the server, so its CORS policy allows requests from the
@@ -167,8 +171,6 @@ well for a 15–20 second capture.
   runs client-side)
 - Seasonal themes (Christmas, Easter, churrasco, ...)
 - Two-page flyers
-- Cloudinary for image uploads (replacing local disk storage — see the
-  "Known limitation" note above)
 - AI-suggested flyer copy via the Claude API
 - Direct WhatsApp / Instagram sharing
 - Multi-user auth (the MVP is intentionally single-tenant)
@@ -187,7 +189,7 @@ well for a 15–20 second capture.
 │   └── src/
 │       ├── models/        Product, Flyer (Mongoose schemas)
 │       ├── routes/        products, flyers, upload, health
-│       └── config/        MongoDB connection
+│       └── config/        MongoDB + Cloudinary connections
 ├── ENCARTES_SPEC.md  full project spec (Portuguese)
 └── render.yaml        Render Blueprint for both services
 ```
