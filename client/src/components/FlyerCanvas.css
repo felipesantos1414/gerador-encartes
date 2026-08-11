@@ -14,14 +14,21 @@
 }
 
 /* header-zone/header-bg/header-content split: header-bg is a background
-   layer sized independently of header-content's own (taller, when the
-   mascot is present) height. This keeps the mascot's "overlap" effect
-   entirely inside header-zone's own box - nothing here ever extends past
-   header-zone into .divider/.grid, so there are no overlapping DOM
-   siblings at the .flyer level for html2canvas to inconsistently clip
-   (see the comment on .product .img-photo below for why that matters). */
+   layer independent of header-content's own box, so header-content (and the
+   mascot within it, for the "logo" variant) can be sized/positioned freely
+   without ever extending past header-zone into .divider/.grid - there are
+   no overlapping DOM siblings at the .flyer level for html2canvas to
+   inconsistently clip (see the comment on .product .img-photo below for
+   why that matters). */
 .flyer .header-zone {
   position: relative;
+}
+/* The "logo" header variant uses a fixed height (~13% of the flyer's own
+   height, matching referencia-encarte.png) instead of auto/padding-driven
+   height, so the mascot can be sized to fill it precisely with its feet at
+   the band's bottom edge. Mega Ofertas' header stays auto-height. */
+.flyer .header-zone-fixed {
+  height: 18.4cqw;
 }
 .flyer .header-bg {
   position: absolute;
@@ -30,14 +37,6 @@
   background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
   background-size: 14px 14px;
 }
-/* Shorter than header-zone so the mascot's lower body, which extends past
-   header-content's "text" height, reveals the flyer's own body color (the
-   flyer background and this theme's body color are the same royal blue by
-   design) instead of the header color - a two-tone "standing in front of
-   the header" illusion with no element actually overlapping a sibling. */
-.flyer .header-bg-reveal {
-  height: 68%;
-}
 .flyer .header-content {
   position: relative;
   padding: 3.2% 4% 2.6%;
@@ -45,6 +44,16 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 2%;
+}
+/* No bottom padding: the mascot (height: 100%) needs to reach header-zone's
+   true bottom edge, matching the reference's "feet on the band's bottom
+   edge" framing. Title and logo/validity are shorter than the mascot and
+   simply don't use the extra vertical room below them. */
+.flyer .header-content-logo {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 2.4cqw 3cqw 0;
+  align-items: stretch;
 }
 
 .flyer .headline {
@@ -95,10 +104,19 @@
   flex-direction: row;
   align-items: flex-start;
   gap: 3%;
+  height: 100%;
 }
+/* Sized by height (not width) so it fills the fixed-height band with its
+   feet at the bottom, per referencia-encarte.png; width follows from the
+   cropped asset's own aspect ratio. flex-shrink: 0 locks it at that exact
+   size - implicit flex-shrink amounts have been unreliable between the
+   live preview and html2canvas's export renderer elsewhere in this file,
+   so every header/mascot/logo dimension here is an explicit value instead
+   of one left for the flex algorithm to compute on the fly. */
 .flyer .brand-logo .mascot {
-  width: 20cqw;
-  height: auto;
+  height: 100%;
+  width: auto;
+  flex-shrink: 0;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
 }
 .flyer .brand-logo .logo-stack {
@@ -106,10 +124,15 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 6px;
+  flex-shrink: 0;
 }
 .flyer .brand-logo .logo-img {
-  width: 30cqw;
+  width: 25cqw;
   height: auto;
+}
+.flyer .brand-logo .validity {
+  font-size: clamp(7px, 1.15cqw, 12px);
+  white-space: nowrap;
 }
 
 .flyer .divider {
@@ -138,7 +161,9 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  --img-size: clamp(40px, 8.5cqw, 84px);
+  /* --img-size comes from the theme (see FlyerCanvas.jsx), inherited from
+     the .flyer root - each theme picks a size proportional to its own grid
+     column count so photos fill most of the cell regardless of density. */
 }
 .flyer .product .name {
   font-weight: 800;
@@ -173,12 +198,38 @@
   height: 100%;
 }
 
+/* height is explicit (not derived from padding + two lines of text at two
+   font sizes) and content is centered via flexbox, rather than relying on
+   html2canvas to compute an auto/content-driven height correctly - it
+   doesn't (same auto-height-from-text-content underestimate already fixed
+   once for the .img-fallback emoji glyph above). The clamp() values are the
+   live auto-height this replaced (~1.93x the font-size), so the visual size
+   is unchanged - only how that size is reached (explicit vs. computed).
+
+   Separately, html2canvas renders this box a few pixels shorter than its
+   real height when centering flex content with little/no bottom padding
+   (border-radius made it worse but wasn't the sole cause - removing it
+   didn't fully fix taller test boxes, and the shortfall didn't scale with
+   the radius value either). Adding real padding-bottom empirically fixes
+   it: the exported height then matches the live height almost exactly, and
+   centered text lands within ~2% of true center (measured across several
+   tags at 720px). padding-bottom's value here is that empirically-tuned
+   amount, not a value derived from any single CSS property - if the price
+   tag's font-size/height clamp changes, re-measure rather than assume this
+   still holds. One tag out of several tested (consistently the first
+   product in DOM order, cause not identified) still renders a few px off;
+   worth re-checking if this component changes again. */
 .flyer .price {
   position: relative;
   margin-top: 6%;
+  height: clamp(31px, 6.6cqw, 62px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   background: var(--tag);
   color: var(--white);
-  padding: 3% 14% 4%;
+  padding: 0 14% 21px;
   border-radius: 8px;
   font-weight: 900;
   font-size: clamp(16px, 3.4cqw, 32px);

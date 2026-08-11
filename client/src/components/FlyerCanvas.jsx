@@ -35,16 +35,13 @@ const FlyerCanvas = forwardRef(function FlyerCanvas({ theme, title, storeName, v
         '--header-bg': theme.colors.headerBg,
         '--footer-bg': theme.colors.footerBg,
         '--tag': theme.colors.priceTag,
+        '--img-size': theme.imageSize,
         fontFamily: theme.font,
       }}
     >
-      <div className="header-zone">
-        {/* header-bg is a shorter rectangle than header-zone for the "logo"
-            variant, so the mascot's lower body reveals the flyer's own body
-            color instead of the header color - see the CSS comment on
-            .header-bg-reveal for why this avoids overlapping DOM siblings. */}
-        <div className={`header-bg ${isLogoHeader ? 'header-bg-reveal' : ''}`} />
-        <div className="header-content">
+      <div className={`header-zone ${isLogoHeader ? 'header-zone-fixed' : ''}`}>
+        <div className="header-bg" />
+        <div className={`header-content ${isLogoHeader ? 'header-content-logo' : ''}`}>
           <div className="headline">
             <div className="l1">{l1}</div>
             <div className="l2">{l2}</div>
