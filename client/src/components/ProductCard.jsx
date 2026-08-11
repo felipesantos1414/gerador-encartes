@@ -1,14 +1,18 @@
+import { useState } from 'react'
 import { categoryLabel, currencyFormatter } from '../constants'
 
 function ProductCard({ product, onEdit, onDelete }) {
+  const [imgFailed, setImgFailed] = useState(false)
+
   return (
     <div className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="flex h-32 items-center justify-center bg-slate-100">
-        {product.imageUrl ? (
+        {product.imageUrl && !imgFailed ? (
           <img
             src={product.imageUrl}
             alt={product.name}
             className="h-full w-full object-cover"
+            onError={() => setImgFailed(true)}
           />
         ) : (
           <span className="text-sm text-slate-400">Sem imagem</span>

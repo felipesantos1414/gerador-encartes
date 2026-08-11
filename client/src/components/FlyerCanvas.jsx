@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, useState } from 'react'
 import { splitHeadline } from '../constants'
 import './FlyerCanvas.css'
 
@@ -7,22 +7,69 @@ const priceFormatter = new Intl.NumberFormat('pt-BR', {
   maximumFractionDigits: 2,
 })
 
-function buildRows(items, grid, maxProducts) {
+// Splits items into as few rows as possible (never exceeding maxCols per
+// row), then balances the item count evenly across those rows so the last
+// row never ends up with a lone orphan item - e.g. 7 items at maxCols=4
+// becomes 4+3, not 4+3 front-loaded followed by a leftover, and 4 items
+// becomes 2+2 rather than a single row of 4.
+function buildRows(items, maxCols, maxProducts) {
   const capped = items.slice(0, maxProducts)
+  if (capped.length === 0) return []
+  const rowCount = Math.ceil(capped.length / maxCols)
+  const base = Math.floor(capped.length / rowCount)
+  const remainder = capped.length % rowCount
   const rows = []
   let i = 0
-  let isFirstRow = true
-  while (i < capped.length) {
-    const columns = isFirstRow ? grid.row1 : grid.rowRest
-    rows.push({ items: capped.slice(i, i + columns), columns })
-    i += columns
-    isFirstRow = false
+  for (let r = 0; r < rowCount; r++) {
+    const count = base + (r < remainder ? 1 : 0)
+    rows.push({ items: capped.slice(i, i + count), maxCols })
+    i += count
   }
   return rows
 }
 
+function FallbackIcon() {
+  return (
+    <div className="img-fallback-wrap">
+      <svg
+        className="img-fallback"
+        width="100%"
+        height="100%"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path
+          d="M2 3h2l1.2 4h13.6l-1.8 8H7.4L6.4 8"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle cx="9.5" cy="19" r="1.4" fill="currentColor" />
+        <circle cx="16.5" cy="19" r="1.4" fill="currentColor" />
+      </svg>
+    </div>
+  )
+}
+
+function ProductImage({ item }) {
+  const [failed, setFailed] = useState(false)
+  if (!item.imageUrl || failed) return <FallbackIcon />
+  return (
+    <img
+      className="img-photo"
+      src={item.imageUrl}
+      alt={item.name}
+      crossOrigin="anonymous"
+      onError={() => setFailed(true)}
+    />
+  )
+}
+
 const FlyerCanvas = forwardRef(function FlyerCanvas({ theme, title, storeName, validityText, items }, ref) {
-  const rows = buildRows(items, theme.grid, theme.maxProducts)
+  const rows = buildRows(items, theme.maxCols, theme.maxProducts)
   const { l1, l2 } = splitHeadline(title)
   const isLogoHeader = theme.headerVariant === 'logo'
 
@@ -73,37 +120,13 @@ const FlyerCanvas = forwardRef(function FlyerCanvas({ theme, title, storeName, v
             className="row"
             style={{
               gridTemplateColumns: `repeat(${row.items.length}, 1fr)`,
-              width: `${(row.items.length / row.columns) * 100}%`,
+              width: `${(row.items.length / row.maxCols) * 100}%`,
             }}
           >
             {row.items.map((item, itemIndex) => (
               <div className="product" key={item.id ?? itemIndex}>
                 <div className="name">{item.name}</div>
-                {item.imageUrl ? (
-                  <img className="img-photo" src={item.imageUrl} alt={item.name} crossOrigin="anonymous" />
-                ) : (
-                  <div className="img-fallback-wrap">
-                    <svg
-                      className="img-fallback"
-                      width="100%"
-                      height="100%"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M2 3h2l1.2 4h13.6l-1.8 8H7.4L6.4 8"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <circle cx="9.5" cy="19" r="1.4" fill="currentColor" />
-                      <circle cx="16.5" cy="19" r="1.4" fill="currentColor" />
-                    </svg>
-                  </div>
-                )}
+                <ProductImage item={item} />
                 <div className="price">
                   {priceFormatter.format(item.price)}
                   <span className="unit">{item.unit}</span>
