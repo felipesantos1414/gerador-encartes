@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { removeBackground } from '@imgly/background-removal'
 import { CATEGORIES, UNITS } from '../constants'
 import { uploadImage } from '../api/products'
 
@@ -8,7 +9,9 @@ function ProductFormModal({ product, onClose, onSubmit }) {
   const [form, setForm] = useState(emptyForm)
   const [imageFile, setImageFile] = useState(null)
   const [preview, setPreview] = useState('')
+  const [removeBg, setRemoveBg] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [removingBg, setRemovingBg] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -49,7 +52,18 @@ function ProductFormModal({ product, onClose, onSubmit }) {
     try {
       let imageUrl = form.imageUrl
       if (imageFile) {
-        imageUrl = await uploadImage(imageFile)
+        let fileToUpload = imageFile
+        if (removeBg) {
+          setRemovingBg(true)
+          try {
+            const cutout = await removeBackground(imageFile)
+            const baseName = imageFile.name.replace(/\.[^.]+$/, '')
+            fileToUpload = new File([cutout], `${baseName}.png`, { type: 'image/png' })
+          } finally {
+            setRemovingBg(false)
+          }
+        }
+        imageUrl = await uploadImage(fileToUpload)
       }
       await onSubmit({ ...form, price: Number(form.price), imageUrl })
     } catch (err) {
@@ -124,6 +138,23 @@ function ProductFormModal({ product, onClose, onSubmit }) {
             <input type="file" accept="image/*" onChange={handleFileChange} className="text-sm" />
           </label>
 
+          {imageFile && (
+            <label className="flex items-start gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={removeBg}
+                onChange={(e) => setRemoveBg(e.target.checked)}
+                className="mt-0.5"
+              />
+              <span>
+                Remover fundo automaticamente
+                <span className="block text-xs text-slate-400">
+                  Desative se a foto já tiver fundo transparente
+                </span>
+              </span>
+            </label>
+          )}
+
           {preview && (
             <img src={preview} alt="Pré-visualização" className="h-24 w-24 self-center rounded-lg object-cover" />
           )}
@@ -143,7 +174,7 @@ function ProductFormModal({ product, onClose, onSubmit }) {
               disabled={saving}
               className="flex-1 rounded-lg bg-emerald-600 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
             >
-              {saving ? 'Salvando...' : 'Salvar'}
+              {removingBg ? 'Removendo fundo...' : saving ? 'Salvando...' : 'Salvar'}
             </button>
           </div>
         </form>
