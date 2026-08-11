@@ -56,17 +56,38 @@
   align-items: stretch;
 }
 
+/* flex: 1 1 0% (not the "auto" flex-basis default) is what makes .headline's
+   width purely a function of the flex distribution - header-content's width
+   minus the brand/mascot's fixed width - rather than of .headline's own
+   content. With flex-basis: auto, a flex item's basis is its content size,
+   which made clientWidth itself shrink/grow depending on how large the
+   headline text currently was - a feedback loop against the very thing
+   FlyerCanvas.jsx measures l1/l2's scrollWidth against to compute
+   --headline-scale, silently producing an under-fitted scale. min-width: 0
+   still applies so it can shrink below that content size when needed. */
 .flyer .headline {
   line-height: 0.92;
   font-weight: 900;
   text-transform: uppercase;
+  flex: 1 1 0%;
+  min-width: 0;
+}
+/* white-space: nowrap caps the headline at exactly 2 lines (l1, l2) - a
+   long l1 can no longer wrap into a 3rd line and spill past the header
+   band's bottom edge. Width overflow from nowrap is instead corrected by
+   --headline-scale (set in FlyerCanvas.jsx via a post-render measurement),
+   which shrinks both lines together so l1 always fits on its one line. */
+.flyer .headline .l1,
+.flyer .headline .l2 {
+  white-space: nowrap;
+  overflow: hidden;
 }
 .flyer .headline .l1 {
-  font-size: clamp(28px, 6.2cqw, 54px);
+  font-size: calc(clamp(28px, 6.2cqw, 54px) * var(--headline-scale, 1));
   letter-spacing: 0.01em;
 }
 .flyer .headline .l2 {
-  font-size: clamp(24px, 5.2cqw, 46px);
+  font-size: calc(clamp(24px, 5.2cqw, 46px) * var(--headline-scale, 1));
   color: transparent;
   -webkit-text-stroke: 2px var(--white);
   letter-spacing: 0.06em;
@@ -141,18 +162,28 @@
   box-shadow: 0 0 14px 3px rgba(255, 255, 255, 0.85);
 }
 
+/* justify-content: center groups all rows as a compact block, vertically
+   centered in the available height - rows no longer stretch individually
+   (see below), so this is what keeps a short grid (few rows) from either
+   piling up at the top or leaving one huge gap at the bottom; it just
+   distributes the leftover space evenly above and below the block. */
 .flyer .grid {
   flex: 1;
   padding: 4% 4% 2%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3%;
+  justify-content: center;
+  gap: 6%;
 }
+/* Rows used to be flex: 1 (stretching to equally divide .grid's full
+   height), which produced excess empty space *inside* each row - a big
+   blank band above/below the image+price content whenever there were few
+   rows - since the content itself is fixed/max-height, not stretchy. Auto
+   height + the .grid gap above gives each row only the space its content
+   actually needs. */
 .flyer .row {
-  flex: 1;
   display: grid;
-  align-content: center;
   gap: 3%;
 }
 
@@ -172,14 +203,6 @@
   line-height: 1.15;
 }
 
-/* html2canvas clips the overlapped region away from whichever element paints
-   first in DOM order whenever two elements' boxes overlap on screen - and
-   the clipped amount doesn't reliably scale with (or even track) the size
-   of the overlap (it varied between ~0 and ~9px across visually-identical
-   siblings in the same row using the same CSS). Rather than fight an
-   unpredictable bug, the image and price tag are laid out in normal
-   document flow with no overlap at all: nothing to clip, nothing to
-   mis-render. */
 .flyer .product .img-fallback-wrap,
 .flyer .product .img-photo {
   width: var(--img-size);
@@ -198,41 +221,47 @@
   height: 100%;
 }
 
-/* height is explicit (not derived from padding + two lines of text at two
+/* Ticket-style overlap, restored: negative margin-top pulls the tag up over
+   the image's bottom ~30% (calc against --img-size, so it scales with each
+   theme's image size instead of a flat percentage). This reintroduces
+   exactly the box-overlap situation the old no-overlap layout was written
+   to avoid (html2canvas was found to inconsistently clip the overlapped
+   region of whichever element paints first in DOM order - see git history
+   on this file for the original investigation). Re-tested with this exact
+   margin-based overlap via a real html2canvas capture + pixel inspection at
+   704px, and it did NOT reproduce the clipping bug this time (unlike the
+   position/top-percentage approach used previously) - z-index: 1 plus
+   position: relative here ensures the price tag's own layer always paints
+   over the image regardless. If clipping reappears after future changes to
+   this area, re-verify with a real capture before assuming it's fine.
+
+   height is explicit (not derived from padding + two lines of text at two
    font sizes) and content is centered via flexbox, rather than relying on
    html2canvas to compute an auto/content-driven height correctly - it
    doesn't (same auto-height-from-text-content underestimate already fixed
-   once for the .img-fallback emoji glyph above). The clamp() values are the
-   live auto-height this replaced (~1.93x the font-size), so the visual size
-   is unchanged - only how that size is reached (explicit vs. computed).
+   once for the .img-fallback emoji glyph above).
 
    Separately, html2canvas renders this box a few pixels shorter than its
-   real height when centering flex content with little/no bottom padding
-   (border-radius made it worse but wasn't the sole cause - removing it
-   didn't fully fix taller test boxes, and the shortfall didn't scale with
-   the radius value either). Adding real padding-bottom empirically fixes
-   it: the exported height then matches the live height almost exactly, and
-   centered text lands within ~2% of true center (measured across several
-   tags at 720px). padding-bottom's value here is that empirically-tuned
-   amount, not a value derived from any single CSS property - if the price
-   tag's font-size/height clamp changes, re-measure rather than assume this
-   still holds. One tag out of several tested (consistently the first
-   product in DOM order, cause not identified) still renders a few px off;
-   worth re-checking if this component changes again. */
+   real height when centering flex content with little/no bottom padding.
+   Adding real padding-bottom empirically fixes it. This was re-measured for
+   the larger height/font-size below (the previous 21px value was tuned for
+   the smaller tag and no longer applies) - if the clamp()s here change
+   again, re-measure rather than assume this still holds. */
 .flyer .price {
   position: relative;
-  margin-top: 6%;
-  height: clamp(31px, 6.6cqw, 62px);
+  z-index: 1;
+  margin-top: calc(var(--img-size) * -0.3);
+  height: clamp(42px, 9.5cqw, 90px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background: var(--tag);
   color: var(--white);
-  padding: 0 14% 21px;
-  border-radius: 8px;
+  padding: 0 14% 30px;
+  border-radius: 10px;
   font-weight: 900;
-  font-size: clamp(16px, 3.4cqw, 32px);
+  font-size: clamp(20px, 5cqw, 46px);
   line-height: 1;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
 }
@@ -240,7 +269,7 @@
 .flyer .price::after {
   content: '';
   position: absolute;
-  top: 50%;
+  top: 78%;
   width: 12px;
   height: 12px;
   background: var(--bg);

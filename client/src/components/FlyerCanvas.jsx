@@ -1,4 +1,4 @@
-import { forwardRef, useState } from 'react'
+import { forwardRef, useLayoutEffect, useRef, useState } from 'react'
 import { splitHeadline } from '../constants'
 import './FlyerCanvas.css'
 
@@ -54,6 +54,53 @@ function FallbackIcon() {
   )
 }
 
+// l1/l2 are forced to a single line each via CSS (white-space: nowrap), so
+// the headline can never wrap into a 3rd line. This hook instead measures
+// whether either line's natural text width overflows the space the flex
+// layout actually gave .headline, and computes the font-size scale that
+// makes the wider line fit.
+//
+// .headline's available width isn't stable at mount: for the "logo" header
+// variant it depends on the mascot/logo images' rendered width, which is
+// still unknown (0) until those <img>s finish loading, well after this
+// effect's first synchronous pass. A ResizeObserver on .headline re-measures
+// whenever its allotted width actually changes for any reason (images
+// loading, the flyer itself resizing), instead of trusting a single
+// mount-time reading. Each measurement forces --headline-scale back to 1
+// first so scrollWidth always reflects the true unshrunk text width, rather
+// than compounding ratios against whatever scale happened to be applied.
+function useHeadlineFit(l1, l2) {
+  const l1Ref = useRef(null)
+  const l2Ref = useRef(null)
+  const [scale, setScale] = useState(1)
+
+  useLayoutEffect(() => {
+    const l1El = l1Ref.current
+    const l2El = l2Ref.current
+    if (!l1El || !l2El) return
+    const headlineEl = l1El.parentElement
+
+    function measureAndFit() {
+      const prevScale = headlineEl.style.getPropertyValue('--headline-scale')
+      headlineEl.style.setProperty('--headline-scale', '1')
+      const ratio = Math.max(
+        l1El.scrollWidth / Math.max(l1El.clientWidth, 1),
+        l2El.scrollWidth / Math.max(l2El.clientWidth, 1),
+        1,
+      )
+      headlineEl.style.setProperty('--headline-scale', prevScale || '1')
+      setScale(ratio > 1 ? Math.max(0.2, 1 / ratio) : 1)
+    }
+
+    measureAndFit()
+    const observer = new ResizeObserver(measureAndFit)
+    observer.observe(headlineEl)
+    return () => observer.disconnect()
+  }, [l1, l2])
+
+  return { l1Ref, l2Ref, scale }
+}
+
 function ProductImage({ item }) {
   const [failed, setFailed] = useState(false)
   if (!item.imageUrl || failed) return <FallbackIcon />
@@ -72,6 +119,7 @@ const FlyerCanvas = forwardRef(function FlyerCanvas({ theme, title, storeName, v
   const rows = buildRows(items, theme.maxCols, theme.maxProducts)
   const { l1, l2 } = splitHeadline(title)
   const isLogoHeader = theme.headerVariant === 'logo'
+  const { l1Ref, l2Ref, scale: headlineScale } = useHeadlineFit(l1, l2)
 
   return (
     <div
@@ -89,9 +137,9 @@ const FlyerCanvas = forwardRef(function FlyerCanvas({ theme, title, storeName, v
       <div className={`header-zone ${isLogoHeader ? 'header-zone-fixed' : ''}`}>
         <div className="header-bg" />
         <div className={`header-content ${isLogoHeader ? 'header-content-logo' : ''}`}>
-          <div className="headline">
-            <div className="l1">{l1}</div>
-            <div className="l2">{l2}</div>
+          <div className="headline" style={{ '--headline-scale': headlineScale }}>
+            <div className="l1" ref={l1Ref}>{l1}</div>
+            <div className="l2" ref={l2Ref}>{l2}</div>
           </div>
 
           {isLogoHeader ? (
