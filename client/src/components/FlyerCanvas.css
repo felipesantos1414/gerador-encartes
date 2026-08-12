@@ -142,7 +142,7 @@
 }
 .flyer .brand .validity {
   font-weight: 800;
-  font-size: clamp(10px, 1.9cqw, 17px);
+  font-size: clamp(12px, 2.3cqw, 20px);
 }
 
 /* gap (not the outer header-content layout) is what pulls the mascot toward
@@ -212,7 +212,7 @@
   margin-top: 1.5cqw;
 }
 .flyer .brand-logo .validity {
-  font-size: clamp(7px, 1.15cqw, 12px);
+  font-size: clamp(9px, 1.5cqw, 15px);
   white-space: nowrap;
 }
 
@@ -230,7 +230,14 @@
    genuinely the balanced option between those two complaints - the leftover
    space is real either way (few rows in a fixed-height grid), so the fix
    isn't which edge to push it to, it's splitting it evenly. Rows still
-   don't stretch (see .row below) - only where the block as a whole sits. */
+   don't stretch (see .row below) - only where the block as a whole sits.
+
+   --gap-scale (set in FlyerCanvas.jsx from referenceRows / actual row
+   count) grows this gap when there are fewer rows than the theme's full
+   grid produces - a row already at the theme's max column count can't grow
+   any wider without overflowing its cells (see --row-image-scale below),
+   so for those layouts the *gap* is the only lever left to spend the
+   leftover vertical space, rather than leaving it as dead centering slack. */
 .flyer .grid {
   flex: 1;
   padding: 4% 4% 2%;
@@ -238,7 +245,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6%;
+  gap: calc(6% * var(--gap-scale, 1));
 }
 /* Rows used to be flex: 1 (stretching to equally divide .grid's full
    height), which produced excess empty space *inside* each row - a big
@@ -262,18 +269,29 @@
 }
 .flyer .product .name {
   font-weight: 800;
-  font-size: clamp(11px, 2cqw, 19px);
+  font-size: clamp(13px, 2.4cqw, 22px);
   margin-bottom: 4%;
   line-height: 1.15;
 }
 
+/* --row-image-scale (set per row in FlyerCanvas.jsx, default 1 via the
+   fallback here for anything rendered outside a .row) grows the image -
+   and, through .price's own margin-top below, the ticket overlap with it -
+   when this row has fewer than the theme's max columns. A row that's
+   already at max density can't grow this way without its cells overflowing
+   into each other; see --gap-scale on .grid above for how that case is
+   handled instead. */
 .flyer .product .img-fallback-wrap,
-.flyer .product .img-photo {
-  width: var(--img-size);
+.flyer .product .img-photo-wrap {
+  width: calc(var(--img-size) * var(--row-image-scale, 1));
   aspect-ratio: 1;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
 }
+/* width/height: 100% of img-photo-wrap above, not sized directly - see the
+   comment on ProductImage in FlyerCanvas.jsx for why. */
 .flyer .product .img-photo {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   border-radius: 8px;
 }
@@ -322,7 +340,7 @@
 .flyer .price {
   position: relative;
   z-index: 1;
-  margin-top: calc(var(--img-size) * -0.12);
+  margin-top: calc(var(--img-size) * var(--row-image-scale, 1) * -0.12);
   height: clamp(33px, 7.4cqw, 70px);
   display: flex;
   flex-direction: column;
@@ -354,12 +372,18 @@
 .flyer .price::after {
   right: -6px;
 }
+/* margin-top was 2px - fine when the tag was bigger (before it was
+   deliberately shrunk to a more modest ticket size), but at the smaller
+   sizes now in play that reads as the unit sitting flush against the price
+   digits ("3,99kg") in export. Bumped to a flat 5px, re-verified against a
+   real html2canvas capture (not just the live preview) since this file has
+   a history of the two disagreeing on vertical spacing. */
 .flyer .price .unit {
   display: block;
   text-align: right;
   font-size: 0.42em;
   font-weight: 800;
-  margin-top: 2px;
+  margin-top: 5px;
 }
 
 .flyer .footer {
