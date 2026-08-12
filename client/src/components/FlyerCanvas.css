@@ -85,11 +85,23 @@
    long l1 can no longer wrap into a 3rd line and spill past the header
    band's bottom edge. Width overflow from nowrap is instead corrected by
    --headline-scale (set in FlyerCanvas.jsx via a post-render measurement),
-   which shrinks both lines together so l1 always fits on its one line. */
+   which shrinks both lines together so l1 always fits on its one line -
+   nowrap alone is enough for that, no overflow:hidden needed.
+
+   overflow: hidden was here too, and it was the real bug: at font-weight:
+   900, this font's ascent is taller than a line-height: 1 box, so most of
+   each glyph rendered above l1's own box top - invisible in the live
+   preview (where that overshoot just overlaps visually with nothing) but
+   hard-clipped in export, since overflow: hidden has no such leniency.
+   Confirmed by capturing the real .flyer at the real export scale (3, not
+   a smaller test scale) and finding the visible text pixels only in the
+   bottom ~40px of a ~107px-tall box - the rest was sliced clean off, which
+   is exactly what a user-submitted exported PDF showed. Dropping
+   overflow: hidden lets the full glyph paint; nowrap alone still guarantees
+   a single line per element. */
 .flyer .headline .l1,
 .flyer .headline .l2 {
   white-space: nowrap;
-  overflow: hidden;
 }
 /* l2 ("SEMANA") is now the larger, dominant line and l1 ("OFERTAS DA") the
    smaller lead-in - the reverse of the original hierarchy - per the
@@ -210,21 +222,22 @@
   box-shadow: 0 0 14px 3px rgba(255, 255, 255, 0.85);
 }
 
-/* justify-content: flex-start anchors the row block to the top of .grid,
-   right below the header/divider - not centered. Centering (tried in
-   2033f38) split the leftover space evenly above and below a short row
-   block, and the top half read as a big empty gap sitting right under the
-   header, which looked broken. Anchoring to the top pushes all the leftover
-   space to the bottom instead, where it doesn't draw the eye. Rows still
-   don't stretch (see .row below) - only where the block as a whole sits
-   changed, not the gap between rows within it. */
+/* justify-content: center. Tried flex-start (anchoring the row block to the
+   top) instead of this - that fixed the "big gap under the header" look for
+   a short grid, but for the same reason it just relocates ALL the leftover
+   space to the bottom instead of splitting it, which reads as an equally
+   large, equally awkward void sitting above the footer. Centering is
+   genuinely the balanced option between those two complaints - the leftover
+   space is real either way (few rows in a fixed-height grid), so the fix
+   isn't which edge to push it to, it's splitting it evenly. Rows still
+   don't stretch (see .row below) - only where the block as a whole sits. */
 .flyer .grid {
   flex: 1;
   padding: 4% 4% 2%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 6%;
 }
 /* Rows used to be flex: 1 (stretching to equally divide .grid's full
