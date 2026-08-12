@@ -210,18 +210,21 @@
   box-shadow: 0 0 14px 3px rgba(255, 255, 255, 0.85);
 }
 
-/* justify-content: center groups all rows as a compact block, vertically
-   centered in the available height - rows no longer stretch individually
-   (see below), so this is what keeps a short grid (few rows) from either
-   piling up at the top or leaving one huge gap at the bottom; it just
-   distributes the leftover space evenly above and below the block. */
+/* justify-content: flex-start anchors the row block to the top of .grid,
+   right below the header/divider - not centered. Centering (tried in
+   2033f38) split the leftover space evenly above and below a short row
+   block, and the top half read as a big empty gap sitting right under the
+   header, which looked broken. Anchoring to the top pushes all the leftover
+   space to the bottom instead, where it doesn't draw the eye. Rows still
+   don't stretch (see .row below) - only where the block as a whole sits
+   changed, not the gap between rows within it. */
 .flyer .grid {
   flex: 1;
   padding: 4% 4% 2%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 6%;
 }
 /* Rows used to be flex: 1 (stretching to equally divide .grid's full
