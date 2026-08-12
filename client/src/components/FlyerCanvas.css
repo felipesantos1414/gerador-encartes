@@ -280,16 +280,29 @@
    when this row has fewer than the theme's max columns. A row that's
    already at max density can't grow this way without its cells overflowing
    into each other; see --gap-scale on .grid above for how that case is
-   handled instead. */
+   handled instead.
+
+   position: relative here (paired with .img-photo's position: absolute
+   below) matters for real, non-square photos: a plain width: 100%;
+   height: 100% on the <img> was measured NOT resolving against this
+   wrapper's own aspect-ratio: 1 box for at least one uploaded photo (a
+   446x300 portrait shot) - the wrapper grew to ~1.49x its intended height
+   instead, matching the photo's OWN aspect ratio, as if height: 100% had
+   silently fallen back to auto. Absolutely positioning the <img> against
+   this wrapper's padding box resolves width/height through a different,
+   more reliable codepath than percentage sizing through normal flow. */
 .flyer .product .img-fallback-wrap,
 .flyer .product .img-photo-wrap {
+  position: relative;
   width: calc(var(--img-size) * var(--row-image-scale, 1));
   aspect-ratio: 1;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
 }
-/* width/height: 100% of img-photo-wrap above, not sized directly - see the
-   comment on ProductImage in FlyerCanvas.jsx for why. */
+/* position: absolute + inset: 0 against img-photo-wrap above, not sized via
+   width/height: 100% - see the comment there for why. */
 .flyer .product .img-photo {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
