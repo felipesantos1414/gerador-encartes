@@ -65,8 +65,17 @@
    FlyerCanvas.jsx measures l1/l2's scrollWidth against to compute
    --headline-scale, silently producing an under-fitted scale. min-width: 0
    still applies so it can shrink below that content size when needed. */
+/* line-height was 0.92 (tighter than the font's natural leading) to keep
+   the 2-line block compact. At that tightness, the capital-letter ascenders
+   of the top line rendered above its own line box - not clipped by any
+   ancestor's overflow, but by the flow itself having nowhere to put them,
+   which sliced the tops off "OFERTAS DA" in export (confirmed by capturing
+   .headline in isolation with html2canvas and seeing the same cut in the
+   canvas's own bounds). 1.0 gives just enough headroom to stop that without
+   materially changing the block's vertical position - the top edge is still
+   set by .header-content's own padding, not by line-height. */
 .flyer .headline {
-  line-height: 0.92;
+  line-height: 1;
   font-weight: 900;
   text-transform: uppercase;
   flex: 1 1 0%;
@@ -82,12 +91,15 @@
   white-space: nowrap;
   overflow: hidden;
 }
+/* l2 ("SEMANA") is now the larger, dominant line and l1 ("OFERTAS DA") the
+   smaller lead-in - the reverse of the original hierarchy - per the
+   Redefort reference. The outline treatment stays on l2 regardless of size. */
 .flyer .headline .l1 {
-  font-size: calc(clamp(28px, 6.2cqw, 54px) * var(--headline-scale, 1));
+  font-size: calc(clamp(24px, 5.2cqw, 46px) * var(--headline-scale, 1));
   letter-spacing: 0.01em;
 }
 .flyer .headline .l2 {
-  font-size: calc(clamp(24px, 5.2cqw, 46px) * var(--headline-scale, 1));
+  font-size: calc(clamp(28px, 6.2cqw, 54px) * var(--headline-scale, 1));
   color: transparent;
   -webkit-text-stroke: 2px var(--white);
   letter-spacing: 0.06em;
@@ -121,10 +133,31 @@
   font-size: clamp(10px, 1.9cqw, 17px);
 }
 
+/* gap (not the outer header-content layout) is what pulls the mascot toward
+   the header's horizontal center: logo-stack's own right edge stays pinned
+   to header-content's right edge regardless of this value (that's the
+   space-between on .header-content, unaffected by gap), so widening the gap
+   only pushes the mascot - the other side of this flex row - further left.
+
+   flex-shrink: 0 here matters once the mascot/logo got bigger: without it,
+   header-content's flex algorithm would compress brand-logo's own box below
+   what mascot+logo-stack actually need (since THEY refuse to shrink), and
+   the children would overflow past the header's right edge instead of
+   brand-logo shrinking cleanly - headline (min-width: 0) absorbs all the
+   squeeze instead, which is what it's designed to do.
+
+   gap is cqw, not %, on purpose: a percentage gap on a shrink-to-fit (auto
+   flex-basis) container resolves against that container's own content box,
+   which is itself being computed from the content - a circular reference
+   that measured ~24px short here (children overflowing brand-logo's own
+   box by the missing gap contribution) once a cqw-sized child was in the
+   mix. cqw resolves against the .flyer container query context instead,
+   sidestepping the circularity. */
 .flyer .brand-logo {
   flex-direction: row;
   align-items: flex-start;
-  gap: 3%;
+  flex-shrink: 0;
+  gap: 3.5cqw;
   height: 100%;
 }
 /* Sized by height (not width) so it fills the fixed-height band with its
@@ -140,16 +173,31 @@
   flex-shrink: 0;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
 }
+/* align-items: center (not flex-end) keeps the validity line centered under
+   the logo regardless of which one is wider - the validity date range's
+   width varies a lot with content, and right-aligning it flush with the
+   logo's bounding box made it drift left of the logo's actual visible mark
+   whenever the logo was the narrower of the two.
+
+   width is explicit (not shrink-to-fit around logo-img) because a
+   shrink-to-fit flex item containing a cqw-sized image was measured
+   overflowing its own box by ~25px - the flex algorithm's auto-flex-basis
+   pass doesn't reliably reconcile with cqw's late resolution against the
+   container query context several ancestors up. logo-img is width: 100% of
+   this explicit box instead of its own independent cqw value, removing the
+   mismatch entirely. */
 .flyer .brand-logo .logo-stack {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: 6px;
   flex-shrink: 0;
+  width: 28cqw;
 }
 .flyer .brand-logo .logo-img {
-  width: 25cqw;
+  width: 100%;
   height: auto;
+  margin-top: 1.5cqw;
 }
 .flyer .brand-logo .validity {
   font-size: clamp(7px, 1.15cqw, 12px);
@@ -221,19 +269,23 @@
   height: 100%;
 }
 
-/* Ticket-style overlap, restored: negative margin-top pulls the tag up over
-   the image's bottom ~30% (calc against --img-size, so it scales with each
-   theme's image size instead of a flat percentage). This reintroduces
-   exactly the box-overlap situation the old no-overlap layout was written
-   to avoid (html2canvas was found to inconsistently clip the overlapped
-   region of whichever element paints first in DOM order - see git history
-   on this file for the original investigation). Re-tested with this exact
-   margin-based overlap via a real html2canvas capture + pixel inspection at
-   704px, and it did NOT reproduce the clipping bug this time (unlike the
-   position/top-percentage approach used previously) - z-index: 1 plus
-   position: relative here ensures the price tag's own layer always paints
-   over the image regardless. If clipping reappears after future changes to
-   this area, re-verify with a real capture before assuming it's fine.
+/* Ticket-style overlap: negative margin-top pulls the tag up just enough to
+   touch the image's bottom edge (calc against --img-size, so it scales with
+   each theme's image size instead of a flat percentage) - NOT to cover a
+   meaningful part of the photo. -0.3 (30% of the image height) was tried
+   first and covered roughly half the product; -0.12 only tucks the tag
+   under the image's bottom edge, keeping the product fully visible per
+   referencia-encarte.png. This still reintroduces the box-overlap situation
+   the old no-overlap layout was written to avoid (html2canvas was found to
+   inconsistently clip the overlapped region of whichever element paints
+   first in DOM order - see git history on this file for the original
+   investigation). Re-tested with this exact margin-based overlap via a real
+   html2canvas capture + pixel inspection at 720px, and it did NOT reproduce
+   the clipping bug (unlike the position/top-percentage approach used
+   previously) - z-index: 1 plus position: relative here ensures the price
+   tag's own layer always paints over the image regardless. If clipping
+   reappears after future changes to this area, re-verify with a real
+   capture before assuming it's fine.
 
    height is explicit (not derived from padding + two lines of text at two
    font sizes) and content is centered via flexbox, rather than relying on
@@ -241,27 +293,31 @@
    doesn't (same auto-height-from-text-content underestimate already fixed
    once for the .img-fallback emoji glyph above).
 
+   The height/font-size clamps here are intentionally modest - the tag reads
+   as a ticket attached to the photo, not as an element competing with it in
+   size, especially in the 3-column (Redefort) layout where the tag's own
+   min-size clamps make up a larger share of the smaller cell.
+
    Separately, html2canvas renders this box a few pixels shorter than its
    real height when centering flex content with little/no bottom padding.
    Adding real padding-bottom empirically fixes it. This was re-measured for
-   the larger height/font-size below (the previous 21px value was tuned for
-   the smaller tag and no longer applies) - if the clamp()s here change
-   again, re-measure rather than assume this still holds. */
+   the clamp()s below - if they change again, re-measure rather than assume
+   this still holds. */
 .flyer .price {
   position: relative;
   z-index: 1;
-  margin-top: calc(var(--img-size) * -0.3);
-  height: clamp(42px, 9.5cqw, 90px);
+  margin-top: calc(var(--img-size) * -0.12);
+  height: clamp(33px, 7.4cqw, 70px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   background: var(--tag);
   color: var(--white);
-  padding: 0 14% 30px;
+  padding: 0 14% 23px;
   border-radius: 10px;
   font-weight: 900;
-  font-size: clamp(20px, 5cqw, 46px);
+  font-size: clamp(16px, 3.9cqw, 36px);
   line-height: 1;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
 }
