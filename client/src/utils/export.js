@@ -1,8 +1,66 @@
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 
+// The export button sits below the flyer preview (see PreviewExportPage) -
+// on a phone screen, reaching it requires scrolling down past the flyer
+// first, especially now that the flyer's height is intrinsic to its content
+// and can run 700-1000px tall. html2canvas needs to know the page's current
+// scroll offset to correctly locate the target node within the DOM snapshot
+// it captures from; iOS Safari's visual-vs-layout-viewport behavior is a
+// well-documented source of exactly this kind of mismatch, which shows up as
+// the top of the capture (here, the header) being clipped. Passing the
+// negated current scroll position - the pattern html2canvas's own docs use
+// for "capture after the page has scrolled" - removes the ambiguity instead
+// of relying on html2canvas's own (viewport-dependent) default. windowWidth/
+// windowHeight are pinned to the full document size for the same reason: a
+// clone iframe sized to just the visible viewport could clip content that's
+// scrolled out of view at capture time.
+function captureOptions(node) {
+  return {
+    scale: 3,
+    useCORS: true,
+    backgroundColor: null,
+    width: node.offsetWidth,
+    height: node.offsetHeight,
+    scrollX: -window.scrollX,
+    scrollY: -window.scrollY,
+    windowWidth: document.documentElement.scrollWidth,
+    windowHeight: document.documentElement.scrollHeight,
+  }
+}
+
+// Nunito loads via Google Fonts with font-display: swap (see index.html),
+// so there's a real window - wider on a slower mobile connection - where the
+// page is still painting with a fallback font. The header's title position
+// (line-height, margin-top, the translateY correction) is tuned pixel-by-
+// pixel against Nunito's own glyph metrics specifically (see the comments in
+// FlyerCanvas.css); capturing before the swap completes would silently
+// render with a different font's ascent/descent, breaking every one of
+// those offsets and plausibly producing exactly the "clipped header, torn
+// date line" symptom on a device slow enough to still be mid-swap.
+async function waitForFonts() {
+  if (document.fonts && document.fonts.ready) {
+    await document.fonts.ready
+  }
+}
+
+async function waitForImages(node) {
+  const images = [...node.querySelectorAll('img')]
+  await Promise.all(
+    images.map((img) => {
+      if (img.complete) return Promise.resolve()
+      return new Promise((resolve) => {
+        img.addEventListener('load', resolve, { once: true })
+        img.addEventListener('error', resolve, { once: true })
+      })
+    }),
+  )
+}
+
 async function captureCanvas(node) {
-  return html2canvas(node, { scale: 3, useCORS: true, backgroundColor: null })
+  await waitForFonts()
+  await waitForImages(node)
+  return html2canvas(node, captureOptions(node))
 }
 
 export async function exportPNG(node, filename) {
