@@ -97,17 +97,35 @@
    canvas's own bounds). 1.0 gives just enough headroom to stop that without
    materially changing the block's vertical position - the top edge is still
    set by .header-content's own padding, not by line-height. */
-/* display: flex + justify-content: center vertically centers l1/l2 within
-   .headline's own box - needed because .headline is stretched to the full
-   header height (align-items: stretch on .header-content-logo, matching
-   the mascot) for the "logo" header variant, but l1/l2 are plain stacked
-   block children that only fill the TOP of that box by default, leaving an
-   ugly empty gap below the title down to the header's bottom edge. Centering
-   spends that space instead of leaving it dead, without touching the
-   mascot/logo siblings. For the "brand" variant (Mega Ofertas), .headline
-   isn't stretched (header-content's default align-items: flex-start), so
-   its box already matches l1/l2's own content height and this is a no-op
-   there. */
+/* display: flex + justify-content: center vertically centers l1/l2's LINE
+   BOXES within .headline's own box - needed because .headline is stretched
+   to the full header height (align-items: stretch on .header-content-logo,
+   matching the mascot) for the "logo" header variant, but l1/l2 are plain
+   stacked block children that only fill the TOP of that box by default,
+   leaving an ugly empty gap below the title down to the header's bottom
+   edge. Centering spends that space instead of leaving it dead, without
+   touching the mascot/logo siblings. For the "brand" variant (Mega
+   Ofertas), .headline isn't stretched (header-content's default
+   align-items: flex-start), so its box already matches l1/l2's own content
+   height and this is a no-op there.
+
+   BUT centering the line boxes isn't the same as centering the visible
+   glyphs: measured via real html2canvas capture + pixel scan (first/last
+   row containing bright/white pixels in the headline's column, not just
+   getBoundingClientRect box edges) that at line-height: 1, l1's box has
+   ~17px of empty space above its own glyphs, while l2's glyphs (plus its
+   2px text-stroke outline) extend ~15px past its box's bottom edge - a
+   real font-metric mismatch (ascent/descent vs. line-height for an
+   all-caps, no-descender string), not something justify-content's box math
+   accounts for. Net effect: box-centering left the actual ink sitting
+   ~48.7px lower than symmetric (55.0px of visual gap above "OFERTAS DA",
+   only 6.3px below "SEMANA" down to the divider - confirmed reproducing
+   exactly the "SEMANA almost touches the divider" symptom). See the
+   .header-content-logo .headline rule below for the paint-time correction -
+   scoped to the "logo" variant only, since the "brand" variant's box
+   already hugs its content with no leftover space to have shifted the ink
+   into in the first place; applying the same correction there would push
+   its title up into (or past) the header's own top padding instead. */
 .flyer .headline {
   display: flex;
   flex-direction: column;
@@ -117,6 +135,15 @@
   text-transform: uppercase;
   flex: 1 1 0%;
   min-width: 0;
+}
+/* transform (not margin/padding, so nothing else in the header reflows) -
+   shifts the ink block up by half the measured 48.7px gap imbalance so both
+   visual margins (header top to "OFERTAS DA", "SEMANA" down to the divider)
+   land close to equal. Re-verify with the pixel-scan method described above
+   (not box measurements) if the headline's font-size clamps or line-height
+   change - the offset is specific to this font's metrics at this size. */
+.flyer .header-content-logo .headline {
+  transform: translateY(-24.35px);
 }
 /* white-space: nowrap caps the headline at exactly 2 lines (l1, l2) - a
    long l1 can no longer wrap into a 3rd line and spill past the header
