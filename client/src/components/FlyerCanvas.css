@@ -202,17 +202,25 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 14px;
   flex-shrink: 0;
   width: 28cqw;
 }
+/* margin-top trimmed 1.5cqw -> 0.5cqw to make room for the wider gap below
+   (logo-stack's gap, 6px -> 14px) without the block overflowing the fixed-
+   height header band - re-measured via a real html2canvas capture after the
+   gap/font-size bump above, since the two changes together pushed the
+   block's bottom edge ~4px past header-zone-fixed's bottom. */
 .flyer .brand-logo .logo-img {
   width: 100%;
   height: auto;
-  margin-top: 1.5cqw;
+  margin-top: 0.5cqw;
 }
+/* font-size bumped ~2px (was clamp(9,1.5cqw,15)) and logo-stack's gap above
+   widened 6px -> 14px - the date read as timid/cramped against the logo
+   directly above it at the old size/spacing. */
 .flyer .brand-logo .validity {
-  font-size: clamp(9px, 1.5cqw, 15px);
+  font-size: clamp(11px, 1.7cqw, 17px);
   white-space: nowrap;
 }
 
