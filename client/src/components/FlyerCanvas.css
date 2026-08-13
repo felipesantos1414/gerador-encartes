@@ -97,7 +97,21 @@
    canvas's own bounds). 1.0 gives just enough headroom to stop that without
    materially changing the block's vertical position - the top edge is still
    set by .header-content's own padding, not by line-height. */
+/* display: flex + justify-content: center vertically centers l1/l2 within
+   .headline's own box - needed because .headline is stretched to the full
+   header height (align-items: stretch on .header-content-logo, matching
+   the mascot) for the "logo" header variant, but l1/l2 are plain stacked
+   block children that only fill the TOP of that box by default, leaving an
+   ugly empty gap below the title down to the header's bottom edge. Centering
+   spends that space instead of leaving it dead, without touching the
+   mascot/logo siblings. For the "brand" variant (Mega Ofertas), .headline
+   isn't stretched (header-content's default align-items: flex-start), so
+   its box already matches l1/l2's own content height and this is a no-op
+   there. */
 .flyer .headline {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   line-height: 1;
   font-weight: 900;
   text-transform: uppercase;
@@ -126,15 +140,20 @@
 .flyer .headline .l2 {
   white-space: nowrap;
 }
-/* l2 ("SEMANA") is now the larger, dominant line and l1 ("OFERTAS DA") the
-   smaller lead-in - the reverse of the original hierarchy - per the
-   Redefort reference. The outline treatment stays on l2 regardless of size. */
+/* l2 ("SEMANA") is meant to be the larger, dominant line and l1 ("OFERTAS
+   DA") the smaller lead-in, per the Redefort reference - but l2 is outline/
+   stroke-only (see -webkit-text-stroke below), which has far less visual
+   "ink" than l1's solid fill at the same font-size, so a modest ~1.2x size
+   ratio still read as l1 being the dominant line despite being numerically
+   smaller. Widened to a ~1.6x ratio (l1 also trimmed down, not just l2
+   grown) so l2 reads as bigger even accounting for the outline's lighter
+   weight. */
 .flyer .headline .l1 {
-  font-size: calc(clamp(24px, 5.2cqw, 46px) * var(--headline-scale, 1));
+  font-size: calc(clamp(20px, 4.2cqw, 38px) * var(--headline-scale, 1));
   letter-spacing: 0.01em;
 }
 .flyer .headline .l2 {
-  font-size: calc(clamp(28px, 6.2cqw, 54px) * var(--headline-scale, 1));
+  font-size: calc(clamp(32px, 7.2cqw, 62px) * var(--headline-scale, 1));
   color: transparent;
   -webkit-text-stroke: 2px var(--white);
   letter-spacing: 0.06em;
@@ -298,7 +317,7 @@
 }
 .flyer .product .name {
   font-weight: 800;
-  font-size: clamp(13px, 2.4cqw, 22px);
+  font-size: clamp(15px, 2.7cqw, 24px);
   margin-bottom: 4%;
   line-height: 1.15;
 }
