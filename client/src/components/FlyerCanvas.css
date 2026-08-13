@@ -221,27 +221,27 @@
    container query context several ancestors up. logo-img is width: 100% of
    this explicit box instead of its own independent cqw value, removing the
    mismatch entirely. */
+/* gap was pushed to 14px in an earlier round to fix the date reading as
+   cramped against the logo - overcorrected, and read as the date having
+   drifted down/loose instead (referencia-encarte.png has it sitting close
+   under the logo, high in the header band, not floating with slack above
+   it). 4px - tight, matching the reference - is the actual fix. */
 .flyer .brand-logo .logo-stack {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 4px;
   flex-shrink: 0;
   width: 28cqw;
 }
-/* margin-top trimmed 1.5cqw -> 0.5cqw to make room for the wider gap below
-   (logo-stack's gap, 6px -> 14px) without the block overflowing the fixed-
-   height header band - re-measured via a real html2canvas capture after the
-   gap/font-size bump above, since the two changes together pushed the
-   block's bottom edge ~4px past header-zone-fixed's bottom. */
+/* margin-top dropped to 0 (was 1.5cqw, then 0.5cqw) to bring the whole
+   logo+validity block up - header-content-logo's own top padding (2.4cqw)
+   already provides the block's top offset; this was adding extra space on
+   top of that, pushing the date down along with the logo above it. */
 .flyer .brand-logo .logo-img {
   width: 100%;
   height: auto;
-  margin-top: 0.5cqw;
 }
-/* font-size bumped ~2px (was clamp(9,1.5cqw,15)) and logo-stack's gap above
-   widened 6px -> 14px - the date read as timid/cramped against the logo
-   directly above it at the old size/spacing. */
 .flyer .brand-logo .validity {
   font-size: clamp(11px, 1.7cqw, 17px);
   white-space: nowrap;
@@ -253,14 +253,18 @@
   box-shadow: 0 0 14px 3px rgba(255, 255, 255, 0.85);
 }
 
-/* No more flex: 1 / justify-content: center "fill the leftover space"
-   dance - that leftover space was the actual bug (see .flyer's min-height
-   comment above). .grid now simply takes exactly the height its rows need;
-   padding-top/bottom here is what puts constant, product-count-independent
-   breathing room above the first row and below the last one (% padding
-   resolves against .grid's own width, not its height, so it's identical at
-   4, 6, or 9 products - it doesn't grow to soak up empty space the way
-   --gap-scale used to). */
+/* No more flex: 1 / "fill the leftover space" dance - that leftover space
+   was the actual bug (see .flyer's min-height comment above). .grid now
+   simply takes exactly the height its rows need; padding-top/bottom here is
+   what puts constant, product-count-independent breathing room above the
+   first row and below the last one (% padding resolves against .grid's own
+   width, not its height, so it's identical at 4, 6, or 9 products - it
+   doesn't grow to soak up empty space the way --gap-scale used to).
+
+   align-items: center matters for the one row width can fall short of
+   100% (a capped singleton row - see getRowImageScale in FlyerCanvas.jsx) -
+   every other row is exactly full width by construction and centering is a
+   no-op for those. */
 .flyer .grid {
   padding: 6% 4%;
   display: flex;
@@ -268,23 +272,19 @@
   align-items: center;
   gap: 6%;
 }
-/* justify-content: center (not the .grid default of stretch/flex-start)
-   centers each row's fixed-size images as a group, since a row with fewer
-   than maxCols items is now narrower than the grid instead of being scaled
-   up to fill it - there's no --row-image-scale anymore, every image is a
-   single fixed size (theme.imageSize) regardless of row/product count.
-
-   .grid's align-items: center makes .row a shrink-to-fit flex item (its
-   width is exactly its content's width, not the full grid width) - gap is
-   cqw here rather than % for the same reason documented on .brand-logo
-   above: a percentage gap on a shrink-to-fit container resolves against a
-   box whose own size depends on that same gap, an indefinite-size circular
-   reference. cqw resolves against the .flyer container query context
-   instead, sidestepping it. */
+/* display: grid + an explicit width (set inline from FlyerCanvas.jsx, see
+   rowWidthPct there) rather than a shrink-to-fit flex row: rows need to
+   span the grid's full width edge-to-edge with equal columns, per
+   referencia-encarte.png, not size themselves to their (possibly smaller)
+   content and sit centered as a narrower block - that's what a shrink-to-
+   fit row produced and it read as products crowded into the middle with
+   large empty margins on both sides. gap is % (not cqw) because the row's
+   width is explicit here, not auto/shrink-to-fit - no circular reference
+   like the one documented on .brand-logo above, since the value % resolves
+   against isn't itself computed from the gap. */
 .flyer .row {
-  display: flex;
-  justify-content: center;
-  gap: 3cqw;
+  display: grid;
+  gap: 3%;
 }
 
 .flyer .product {
@@ -303,9 +303,12 @@
   line-height: 1.15;
 }
 
-/* Every product image is a single fixed size (--img-size, from the theme) -
-   no more per-row scaling now that the flyer's height follows its content
-   instead of stretching a fixed number of rows to fill a fixed page.
+/* --row-image-scale (set per row in FlyerCanvas.jsx, default 1 via the
+   fallback here for anything rendered outside a .row) grows the image -
+   and, through .price's own margin-top below, the ticket overlap with it -
+   when this row has fewer than the theme's max columns, so the row still
+   spans the grid's full width instead of leaving empty cell space on
+   either side of a smaller, centered block.
 
    position: relative here (paired with .img-photo's position: absolute
    below) matters for real, non-square photos: a plain width: 100%;
@@ -319,7 +322,7 @@
 .flyer .product .img-fallback-wrap,
 .flyer .product .img-photo-wrap {
   position: relative;
-  width: var(--img-size);
+  width: calc(var(--img-size) * var(--row-image-scale, 1));
   aspect-ratio: 1;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
 }
@@ -378,7 +381,7 @@
 .flyer .price {
   position: relative;
   z-index: 1;
-  margin-top: calc(var(--img-size) * -0.12);
+  margin-top: calc(var(--img-size) * var(--row-image-scale, 1) * -0.12);
   height: clamp(33px, 7.4cqw, 70px);
   display: flex;
   flex-direction: column;

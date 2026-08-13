@@ -135,13 +135,27 @@ function ProductImage({ item }) {
   )
 }
 
-// The flyer's height is intrinsic to its content (see .flyer in the CSS -
-// no more fixed A4 aspect-ratio), so there's no leftover vertical space to
-// spend on scaling images/gaps up for low product counts the way earlier
-// versions of this file did: fewer products now simply produce a shorter
-// flyer instead of a stretched one. Every product's image is therefore a
-// single fixed size (theme.imageSize, sized for the theme's max column
-// count) regardless of how many rows or items are present.
+// Every row spans the grid's full width, edge to edge - a row short of
+// theme.maxCols items (e.g. a 2-item last row in a 3-column theme) scales
+// its images up just enough that items.length * scale / maxCols == 1,
+// rather than staying at the max-density size and leaving empty cell space
+// on either side of a narrower, centered block. This is purely a WIDTH
+// concern (see rowWidthPct in the render below) and has nothing to do with
+// the flyer's height, which stays intrinsic to content either way - a row
+// with bigger images is simply a taller row, not a page being stretched to
+// fill a fixed height.
+//
+// The one case this doesn't apply to is a lone single-item row: scaling one
+// image up to fill the entire row width would look absurd, so that case is
+// capped instead (see getRowImageScale). buildRows' 2-row-minimum for 4+
+// items already keeps this rare.
+const MAX_SINGLETON_IMAGE_SCALE = 1.7
+
+function getRowImageScale(row) {
+  const uncapped = row.maxCols / row.items.length
+  return row.items.length === 1 ? Math.min(MAX_SINGLETON_IMAGE_SCALE, uncapped) : uncapped
+}
+
 const FlyerCanvas = forwardRef(function FlyerCanvas({ theme, title, storeName, validityText, items }, ref) {
   const rows = buildRows(items, theme.maxCols, theme.maxProducts)
   const { l1, l2 } = splitHeadline(title)
@@ -189,20 +203,39 @@ const FlyerCanvas = forwardRef(function FlyerCanvas({ theme, title, storeName, v
       <div className="divider" />
 
       <main className="grid">
-        {rows.map((row, rowIndex) => (
-          <div key={rowIndex} className="row">
-            {row.items.map((item, itemIndex) => (
-              <div className="product" key={item.id ?? itemIndex}>
-                <div className="name">{item.name}</div>
-                <ProductImage item={item} />
-                <div className="price">
-                  {priceFormatter.format(item.price)}
-                  <span className="unit">{item.unit}</span>
+        {rows.map((row, rowIndex) => {
+          const rowImageScale = getRowImageScale(row)
+          // Explicit width, not left to grid's default track-growing: at
+          // the uncapped scale (items.length < maxCols) this always comes
+          // out to exactly 100% - full row width - by construction, which
+          // is exactly right: the images were scaled to fill the per-item
+          // width a full row would give them, so the row needs its full
+          // width to fit them without overflow. It's only < 100% for the
+          // capped singleton-row case above.
+          const rowWidthPct = (row.items.length * rowImageScale / row.maxCols) * 100
+          return (
+            <div
+              key={rowIndex}
+              className="row"
+              style={{
+                gridTemplateColumns: `repeat(${row.items.length}, 1fr)`,
+                width: `${rowWidthPct}%`,
+                '--row-image-scale': rowImageScale,
+              }}
+            >
+              {row.items.map((item, itemIndex) => (
+                <div className="product" key={item.id ?? itemIndex}>
+                  <div className="name">{item.name}</div>
+                  <ProductImage item={item} />
+                  <div className="price">
+                    {priceFormatter.format(item.price)}
+                    <span className="unit">{item.unit}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ))}
+              ))}
+            </div>
+          )
+        })}
       </main>
 
       <footer className="footer">{theme.footerText}</footer>
