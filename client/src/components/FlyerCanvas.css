@@ -182,14 +182,22 @@
 /* margin-top pulls l2 up toward l1 - at line-height: 1 alone the two lines'
    visible ink sat 11.7px apart (measured via pixel scan, not box edges: l1
    ink ran 30.7-55.3px, l2 ink 67.0-102.0px within the header), reading as
-   two separate elements rather than one two-line title. -8px brings that
-   down to a tight, cohesive ~4px. */
+   two separate elements rather than one two-line title. -8px (a first pass)
+   brought that to ~3.7px, still more breathing room than intended.
+
+   Pushed further via the same pixel scan: -12px and -13px both merged the
+   two lines' ink into a single unbroken run somewhere across the text's
+   width (real glyph overlap, not just a tight gap) - confirmed by the scan
+   finding one ink run instead of two. -11px stayed technically separate but
+   only by 0.7px, too close to trust against anti-aliasing/rendering
+   variance. -10px is the tightest value that reliably measured as two
+   clearly separate lines (~1.7px gap) with no merging. */
 .flyer .headline .l2 {
   font-size: calc(clamp(32px, 7.2cqw, 62px) * var(--headline-scale, 1));
   color: transparent;
   -webkit-text-stroke: 2px var(--white);
   letter-spacing: 0.06em;
-  margin-top: -8px;
+  margin-top: -10px;
 }
 
 .flyer .brand {
