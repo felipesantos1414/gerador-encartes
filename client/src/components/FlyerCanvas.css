@@ -1,9 +1,32 @@
+/* Height is intrinsic to content (header + product grid + footer), not a
+   fixed A4 aspect-ratio - forcing a full A4-height page regardless of
+   product count was the actual source of the large empty blue band above/
+   below the product grid for low counts (previously "fixed" by inflating
+   images/gaps to spend that leftover space, which fought this from the
+   wrong end). min-height is a floor only, so 1-2 products don't collapse
+   into an oddly thin strip; it's well short of a full A4 ratio (~1.41x the
+   width) precisely so it doesn't reintroduce the same empty-band problem
+   for low-but-not-tiny counts (4+ already clears it easily via buildRows'
+   2-row minimum below).
+
+   min-height is min(432px, 56.4vw) - i.e. width's own min(720px, 94vw)
+   scaled by 0.6 - rather than 60cqw: an element is a query container for
+   its DESCENDANTS, not for its own box, so cqw used on .flyer's own
+   min-height doesn't resolve against .flyer's width at all - it silently
+   fell back to the viewport instead (measured min-height locking every
+   flyer to exactly 60% of the *browser window's* width regardless of the
+   flyer's own, real ~720px width - a 1-product Redefort flyer and a
+   2-row/6-product one both landed on an identical, coincidental-looking
+   768px). Mirroring width's own min() with each branch pre-multiplied by
+   0.6 reproduces "60% of my own current width" correctly in both the
+   720px-cap and 94vw-cap regimes, without depending on container query
+   context this element doesn't have for itself. */
 .flyer {
   --white: #ffffff;
   container-type: inline-size;
   width: min(720px, 94vw);
   max-width: 100%;
-  aspect-ratio: 210 / 297;
+  min-height: min(432px, 56.4vw);
   background: var(--bg);
   color: var(--white);
   display: flex;
@@ -230,40 +253,38 @@
   box-shadow: 0 0 14px 3px rgba(255, 255, 255, 0.85);
 }
 
-/* justify-content: center. Tried flex-start (anchoring the row block to the
-   top) instead of this - that fixed the "big gap under the header" look for
-   a short grid, but for the same reason it just relocates ALL the leftover
-   space to the bottom instead of splitting it, which reads as an equally
-   large, equally awkward void sitting above the footer. Centering is
-   genuinely the balanced option between those two complaints - the leftover
-   space is real either way (few rows in a fixed-height grid), so the fix
-   isn't which edge to push it to, it's splitting it evenly. Rows still
-   don't stretch (see .row below) - only where the block as a whole sits.
-
-   --gap-scale (set in FlyerCanvas.jsx from referenceRows / actual row
-   count) grows this gap when there are fewer rows than the theme's full
-   grid produces - a row already at the theme's max column count can't grow
-   any wider without overflowing its cells (see --row-image-scale below),
-   so for those layouts the *gap* is the only lever left to spend the
-   leftover vertical space, rather than leaving it as dead centering slack. */
+/* No more flex: 1 / justify-content: center "fill the leftover space"
+   dance - that leftover space was the actual bug (see .flyer's min-height
+   comment above). .grid now simply takes exactly the height its rows need;
+   padding-top/bottom here is what puts constant, product-count-independent
+   breathing room above the first row and below the last one (% padding
+   resolves against .grid's own width, not its height, so it's identical at
+   4, 6, or 9 products - it doesn't grow to soak up empty space the way
+   --gap-scale used to). */
 .flyer .grid {
-  flex: 1;
-  padding: 4% 4% 2%;
+  padding: 6% 4%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: calc(6% * var(--gap-scale, 1));
+  gap: 6%;
 }
-/* Rows used to be flex: 1 (stretching to equally divide .grid's full
-   height), which produced excess empty space *inside* each row - a big
-   blank band above/below the image+price content whenever there were few
-   rows - since the content itself is fixed/max-height, not stretchy. Auto
-   height + the .grid gap above gives each row only the space its content
-   actually needs. */
+/* justify-content: center (not the .grid default of stretch/flex-start)
+   centers each row's fixed-size images as a group, since a row with fewer
+   than maxCols items is now narrower than the grid instead of being scaled
+   up to fill it - there's no --row-image-scale anymore, every image is a
+   single fixed size (theme.imageSize) regardless of row/product count.
+
+   .grid's align-items: center makes .row a shrink-to-fit flex item (its
+   width is exactly its content's width, not the full grid width) - gap is
+   cqw here rather than % for the same reason documented on .brand-logo
+   above: a percentage gap on a shrink-to-fit container resolves against a
+   box whose own size depends on that same gap, an indefinite-size circular
+   reference. cqw resolves against the .flyer container query context
+   instead, sidestepping it. */
 .flyer .row {
-  display: grid;
-  gap: 3%;
+  display: flex;
+  justify-content: center;
+  gap: 3cqw;
 }
 
 .flyer .product {
@@ -282,13 +303,9 @@
   line-height: 1.15;
 }
 
-/* --row-image-scale (set per row in FlyerCanvas.jsx, default 1 via the
-   fallback here for anything rendered outside a .row) grows the image -
-   and, through .price's own margin-top below, the ticket overlap with it -
-   when this row has fewer than the theme's max columns. A row that's
-   already at max density can't grow this way without its cells overflowing
-   into each other; see --gap-scale on .grid above for how that case is
-   handled instead.
+/* Every product image is a single fixed size (--img-size, from the theme) -
+   no more per-row scaling now that the flyer's height follows its content
+   instead of stretching a fixed number of rows to fill a fixed page.
 
    position: relative here (paired with .img-photo's position: absolute
    below) matters for real, non-square photos: a plain width: 100%;
@@ -302,7 +319,7 @@
 .flyer .product .img-fallback-wrap,
 .flyer .product .img-photo-wrap {
   position: relative;
-  width: calc(var(--img-size) * var(--row-image-scale, 1));
+  width: var(--img-size);
   aspect-ratio: 1;
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
 }
@@ -361,7 +378,7 @@
 .flyer .price {
   position: relative;
   z-index: 1;
-  margin-top: calc(var(--img-size) * var(--row-image-scale, 1) * -0.12);
+  margin-top: calc(var(--img-size) * -0.12);
   height: clamp(33px, 7.4cqw, 70px);
   display: flex;
   flex-direction: column;
@@ -407,7 +424,14 @@
   margin-top: 5px;
 }
 
+/* margin-top: auto only does anything when .flyer's min-height floor (see
+   .flyer above) is taller than header+grid+footer actually need - e.g. 1-2
+   products. In that case it's the one thing keeping that leftover space
+   from just sitting below the footer as a blank band; at any content height
+   that already clears the floor (4+ products) there's no leftover flex
+   space for auto to absorb, so this is a no-op there. */
 .flyer .footer {
+  margin-top: auto;
   background: var(--footer-bg);
   padding: 2.4% 4%;
   text-align: center;

@@ -13,14 +13,13 @@ const priceFormatter = new Intl.NumberFormat('pt-BR', {
 // becomes 4+3, not 4+3 front-loaded followed by a leftover.
 //
 // The one deliberate exception: exactly maxCols items (or fewer, down to 4)
-// still forces 2 rows instead of the "fewest rows" minimum of 1. A single
-// row at full column count can't be helped by either of the fill-the-page
-// levers in the render below - its images are already at max width for
-// that density (nothing to grow into), and there's no second row to widen
-// the gap against - so it was measured filling only ~25% of the page (Mega
-// Ofertas, 4 items) versus ~74-84% once forced to 2 rows. n >= 4 keeps this
-// from ever creating a 1-item orphan row (the smallest even 2-way split of
-// 4 is 2+2); below that a single row is already as good as it gets.
+// still forces 2 rows instead of the "fewest rows" minimum of 1 - a single
+// full-width row of e.g. 4 items (Mega Ofertas) reads as an oddly short,
+// very wide block once the flyer's height is intrinsic to its content; 2x2
+// keeps the product block closer to the flyer's own proportions instead.
+// n >= 4 keeps this from ever creating a 1-item orphan row (the smallest
+// even 2-way split of 4 is 2+2); below that a single row is already as good
+// as it gets.
 function buildRows(items, maxCols, maxProducts) {
   const capped = items.slice(0, maxProducts)
   if (capped.length === 0) return []
@@ -136,32 +135,18 @@ function ProductImage({ item }) {
   )
 }
 
-// Fewer products than the theme's full grid leaves the row block short of
-// the available height - the reference case (maxProducts items, filling
-// theme.maxCols per row) is what the design was tuned against, and it looks
-// right. Two independent multipliers close that gap for smaller counts:
-//  - rowImageScale (computed per row, in the render below): a row with
-//    fewer than maxCols items has spare width per cell, so its images (and
-//    the price tag riding on --img-size) grow to use it - capped so a
-//    near-empty row (e.g. a single leftover item) doesn't blow up past a
-//    sane size.
-//  - gapScale (below): rows already at max density can't grow wider
-//    without overflowing their cells, so when there are fewer rows than the
-//    reference layout, the *gap* between rows grows instead, spending the
-//    leftover height there rather than leaving it as one dead zone.
-const MAX_ROW_IMAGE_SCALE = 1.7
-const MAX_GAP_SCALE = 2.6
-
+// The flyer's height is intrinsic to its content (see .flyer in the CSS -
+// no more fixed A4 aspect-ratio), so there's no leftover vertical space to
+// spend on scaling images/gaps up for low product counts the way earlier
+// versions of this file did: fewer products now simply produce a shorter
+// flyer instead of a stretched one. Every product's image is therefore a
+// single fixed size (theme.imageSize, sized for the theme's max column
+// count) regardless of how many rows or items are present.
 const FlyerCanvas = forwardRef(function FlyerCanvas({ theme, title, storeName, validityText, items }, ref) {
   const rows = buildRows(items, theme.maxCols, theme.maxProducts)
   const { l1, l2 } = splitHeadline(title)
   const isLogoHeader = theme.headerVariant === 'logo'
   const { l1Ref, l2Ref, scale: headlineScale } = useHeadlineFit(l1, l2)
-
-  const referenceRows = Math.ceil(theme.maxProducts / theme.maxCols)
-  const gapScale = rows.length > 0
-    ? Math.min(MAX_GAP_SCALE, referenceRows / rows.length)
-    : 1
 
   return (
     <div
@@ -203,47 +188,21 @@ const FlyerCanvas = forwardRef(function FlyerCanvas({ theme, title, storeName, v
       </div>
       <div className="divider" />
 
-      <main className="grid" style={{ '--gap-scale': gapScale }}>
-        {rows.map((row, rowIndex) => {
-          const rowImageScale = Math.min(MAX_ROW_IMAGE_SCALE, row.maxCols / row.items.length)
-          // Per-cell width scales with rowImageScale too, not just item
-          // count - otherwise the enlarged images have nowhere to go but
-          // to overflow their grid track (CSS grid tracks with the default
-          // min-width: auto will grow a track past an explicit container
-          // width to fit oversized content, which happened to "work" here
-          // by accident; this makes the width this row actually needs
-          // explicit instead of relying on that). When rowImageScale is at
-          // its uncapped value (maxCols / items.length), this always comes
-          // out to 100% - full row width - which is exactly right: the
-          // images were scaled to fill the per-item width a full row would
-          // give them, so the row needs its full width to fit them without
-          // overflow. It's only < 100% once MAX_ROW_IMAGE_SCALE caps the
-          // image scale below what full width would allow (e.g. a single
-          // leftover item), leaving that row narrower than the grid.
-          const rowWidthPct = (row.items.length * rowImageScale / row.maxCols) * 100
-          return (
-            <div
-              key={rowIndex}
-              className="row"
-              style={{
-                gridTemplateColumns: `repeat(${row.items.length}, 1fr)`,
-                width: `${rowWidthPct}%`,
-                '--row-image-scale': rowImageScale,
-              }}
-            >
-              {row.items.map((item, itemIndex) => (
-                <div className="product" key={item.id ?? itemIndex}>
-                  <div className="name">{item.name}</div>
-                  <ProductImage item={item} />
-                  <div className="price">
-                    {priceFormatter.format(item.price)}
-                    <span className="unit">{item.unit}</span>
-                  </div>
+      <main className="grid">
+        {rows.map((row, rowIndex) => (
+          <div key={rowIndex} className="row">
+            {row.items.map((item, itemIndex) => (
+              <div className="product" key={item.id ?? itemIndex}>
+                <div className="name">{item.name}</div>
+                <ProductImage item={item} />
+                <div className="price">
+                  {priceFormatter.format(item.price)}
+                  <span className="unit">{item.unit}</span>
                 </div>
-              ))}
-            </div>
-          )
-        })}
+              </div>
+            ))}
+          </div>
+        ))}
       </main>
 
       <footer className="footer">{theme.footerText}</footer>
