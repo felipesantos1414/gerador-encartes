@@ -66,11 +66,11 @@ function ProdutosPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-6">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">Produtos</h1>
+        <h1 className="text-2xl font-bold text-ink">Produtos</h1>
         <button
           type="button"
           onClick={openCreateModal}
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
         >
           + Novo produto
         </button>
@@ -82,12 +82,12 @@ function ProdutosPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por nome..."
-          className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="flex-1 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-faint"
         />
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
         >
           <option value="">Todas as categorias</option>
           {CATEGORIES.map((c) => (
@@ -96,12 +96,12 @@ function ProdutosPage() {
         </select>
       </div>
 
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {error && <p className="mb-4 text-sm text-accent">{error}</p>}
 
       {loading ? (
-        <p className="text-sm text-slate-500">Carregando...</p>
+        <p className="text-sm text-ink-muted">Carregando...</p>
       ) : filteredProducts.length === 0 ? (
-        <p className="text-sm text-slate-500">Nenhum produto encontrado.</p>
+        <p className="text-sm text-ink-muted">Nenhum produto encontrado.</p>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {filteredProducts.map((product) => (

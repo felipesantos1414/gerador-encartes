@@ -27,8 +27,8 @@ function PreviewExportPage({ flyerId, onBack }) {
     setError('')
     try {
       const filename = `encarte-${slugify(flyer.title)}`
-      if (type === 'pdf') await exportPDF(flyerRef.current, filename)
-      else await exportPNG(flyerRef.current, filename)
+      if (type === 'pdf') await exportPDF(flyerRef.current, filename, flyer._id)
+      else await exportPNG(flyerRef.current, filename, flyer._id)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -41,18 +41,18 @@ function PreviewExportPage({ flyerId, onBack }) {
       <button
         type="button"
         onClick={onBack}
-        className="mb-4 text-sm font-medium text-slate-600 hover:underline"
+        className="mb-4 text-sm font-medium text-ink-muted hover:text-ink hover:underline"
       >
         ← Meus Encartes
       </button>
 
-      {loading && <p className="text-sm text-slate-500">Carregando...</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {loading && <p className="text-sm text-ink-muted">Carregando...</p>}
+      {error && <p className="text-sm text-accent">{error}</p>}
 
       {flyer && (
         <>
-          <h1 className="mb-1 text-2xl font-bold text-slate-800">{flyer.title}</h1>
-          <p className="mb-4 text-sm text-slate-500">{flyer.storeName}</p>
+          <h1 className="mb-1 text-2xl font-bold text-ink">{flyer.title}</h1>
+          <p className="mb-4 text-sm text-ink-muted">{flyer.storeName}</p>
 
           <div className="flex flex-col items-center gap-4">
             <FlyerCanvas
@@ -75,7 +75,7 @@ function PreviewExportPage({ flyerId, onBack }) {
                 type="button"
                 disabled={Boolean(exporting)}
                 onClick={() => handleExport('pdf')}
-                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
               >
                 {exporting === 'pdf' ? 'Gerando PDF...' : 'Baixar PDF'}
               </button>
@@ -83,7 +83,7 @@ function PreviewExportPage({ flyerId, onBack }) {
                 type="button"
                 disabled={Boolean(exporting)}
                 onClick={() => handleExport('png')}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                className="rounded-lg border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-surface-hover disabled:opacity-50"
               >
                 {exporting === 'png' ? 'Gerando PNG...' : 'Baixar PNG'}
               </button>

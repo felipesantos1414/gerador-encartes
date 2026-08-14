@@ -4,6 +4,7 @@ import healthRouter from './routes/health.js';
 import productsRouter from './routes/products.js';
 import uploadRouter from './routes/upload.js';
 import flyersRouter from './routes/flyers.js';
+import exportRouter from './routes/export.js';
 
 export function createApp() {
   const app = express();
@@ -20,6 +21,7 @@ export function createApp() {
   app.use('/api/products', productsRouter);
   app.use('/api/upload', uploadRouter);
   app.use('/api/flyers', flyersRouter);
+  app.use('/api/flyers', exportRouter);
 
   app.use((req, res) => {
     res.status(404).json({ error: 'Not found' });

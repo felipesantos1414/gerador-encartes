@@ -1,5 +1,6 @@
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
+import { API_URL } from '../api/http'
 
 // The export button sits below the flyer preview (see PreviewExportPage) -
 // on a phone screen, reaching it requires scrolling down past the flyer
@@ -63,7 +64,7 @@ async function captureCanvas(node) {
   return html2canvas(node, captureOptions(node))
 }
 
-export async function exportPNG(node, filename) {
+async function exportPNGLocal(node, filename) {
   const canvas = await captureCanvas(node)
   const link = document.createElement('a')
   link.download = `${filename}.png`
@@ -81,7 +82,7 @@ export async function exportPNG(node, filename) {
 // extra padding.
 const PX_TO_MM = 25.4 / 96
 
-export async function exportPDF(node, filename) {
+async function exportPDFLocal(node, filename) {
   const canvas = await captureCanvas(node)
   const imgData = canvas.toDataURL('image/png')
   const pageWidth = node.offsetWidth * PX_TO_MM
@@ -93,4 +94,58 @@ export async function exportPDF(node, filename) {
   })
   pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight)
   pdf.save(`${filename}.pdf`)
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+// Server-side (Puppeteer) export - see server/src/routes/export.js - renders
+// the flyer in a real, fixed-size headless Chromium instance instead of
+// capturing whatever the visiting browser happens to be, which is what fixes
+// the iOS Safari header-clipping bug html2canvas couldn't (viewport/scroll
+// quirks specific to that engine, not something fixable from the client
+// side - see git history on this file for what was already tried there).
+async function exportViaServer(flyerId, type, filename) {
+  const res = await fetch(`${API_URL}/flyers/${flyerId}/export?type=${type}`)
+  if (!res.ok) {
+    const body = await res.json().catch(() => null)
+    throw new Error(body?.error || `Erro ${res.status}`)
+  }
+  const blob = await res.blob()
+  downloadBlob(blob, filename)
+}
+
+// flyerId is optional - callers without one (or if the server export isn't
+// reachable/deployed yet) fall back to the original client-side html2canvas
+// capture, kept intact and unchanged as a safety net until the server path
+// is validated on both desktop and iOS. Once it's proven out, the local
+// path can be dropped and node stops being needed here at all.
+export async function exportPNG(node, filename, flyerId) {
+  if (flyerId) {
+    try {
+      await exportViaServer(flyerId, 'png', `${filename}.png`)
+      return
+    } catch (err) {
+      console.warn('Server-side PNG export failed, falling back to local capture:', err.message)
+    }
+  }
+  await exportPNGLocal(node, filename)
+}
+
+export async function exportPDF(node, filename, flyerId) {
+  if (flyerId) {
+    try {
+      await exportViaServer(flyerId, 'pdf', `${filename}.pdf`)
+      return
+    } catch (err) {
+      console.warn('Server-side PDF export failed, falling back to local capture:', err.message)
+    }
+  }
+  await exportPDFLocal(node, filename)
 }

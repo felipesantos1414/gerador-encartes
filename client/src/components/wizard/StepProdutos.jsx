@@ -23,8 +23,8 @@ function StepProdutos({ selectedItems, onToggle, onOverridePriceChange, maxProdu
 
   return (
     <div>
-      <h2 className="mb-1 text-lg font-bold text-slate-800">2. Escolha os produtos</h2>
-      <p className="mb-3 text-sm text-slate-500">
+      <h2 className="mb-1 text-lg font-bold text-ink">2. Escolha os produtos</h2>
+      <p className="mb-3 text-sm text-ink-muted">
         {selectedItems.length}/{maxProducts} selecionados. Defina um preço promocional opcional para o encarte.
       </p>
 
@@ -33,15 +33,15 @@ function StepProdutos({ selectedItems, onToggle, onOverridePriceChange, maxProdu
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Buscar por nome..."
-        className="mb-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+        className="mb-3 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-faint"
       />
 
-      {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
+      {error && <p className="mb-3 text-sm text-accent">{error}</p>}
 
       {loading ? (
-        <p className="text-sm text-slate-500">Carregando...</p>
+        <p className="text-sm text-ink-muted">Carregando...</p>
       ) : filtered.length === 0 ? (
-        <p className="text-sm text-slate-500">Nenhum produto encontrado.</p>
+        <p className="text-sm text-ink-muted">Nenhum produto encontrado.</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {filtered.map((product) => {
@@ -53,7 +53,7 @@ function StepProdutos({ selectedItems, onToggle, onOverridePriceChange, maxProdu
               <li
                 key={product._id}
                 className={`flex flex-wrap items-center gap-3 rounded-lg border p-2 ${
-                  selected ? 'border-emerald-400 bg-emerald-50' : 'border-slate-200'
+                  selected ? 'border-accent bg-accent-soft' : 'border-line'
                 } ${disabled ? 'opacity-50' : ''}`}
               >
                 <label className="flex flex-1 items-center gap-2">
@@ -63,8 +63,8 @@ function StepProdutos({ selectedItems, onToggle, onOverridePriceChange, maxProdu
                     disabled={disabled}
                     onChange={() => onToggle(product)}
                   />
-                  <span className="text-sm font-medium text-slate-800">{product.name}</span>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-sm font-medium text-ink">{product.name}</span>
+                  <span className="text-xs text-ink-muted">
                     {categoryLabel(product.category)} · {currencyFormatter.format(product.price)}/{product.unit}
                   </span>
                 </label>
@@ -77,7 +77,7 @@ function StepProdutos({ selectedItems, onToggle, onOverridePriceChange, maxProdu
                     placeholder="Preço promo."
                     value={item.overridePrice ?? ''}
                     onChange={(e) => onOverridePriceChange(product._id, e.target.value)}
-                    className="w-28 rounded-lg border border-slate-300 px-2 py-1 text-sm"
+                    className="w-28 rounded-lg border border-line bg-base px-2 py-1 text-sm text-ink placeholder:text-ink-faint"
                   />
                 )}
               </li>

@@ -1,1 +1,38 @@
 @import "tailwindcss";
+
+/* Dark UI theme tokens for the app's own chrome (nav, forms, buttons, cards,
+   modals) - NOT the flyer itself. FlyerCanvas.jsx/.css keep their own
+   Redefort/Mega Ofertas colors from themes.js, entirely independent of this
+   palette, since the flyer is the customer-facing printed artifact and its
+   colors are a per-theme design choice, not part of the app's own UI skin.
+
+   Centralized here (Tailwind v4's @theme block) rather than scattered
+   per-component so the palette can be adjusted in one place - each token
+   below auto-generates matching bg-/text-/border- utilities (e.g.
+   --color-accent produces bg-accent, text-accent, border-accent). */
+@theme {
+  --color-base: #121212;
+  --color-surface: #1c1c1c;
+  --color-surface-hover: #272727;
+  --color-line: #333333;
+  --color-line-hover: #474747;
+  --color-ink: #f2f2f2;
+  --color-ink-muted: #a3a3a3;
+  --color-ink-faint: #8a8a8a;
+  --color-accent: #dc2626;
+  --color-accent-hover: #b91c1c;
+  --color-accent-soft: #2a1414;
+}
+
+/* Hints native form chrome (date picker icon, select dropdown popup) to
+   render with dark-appropriate colors instead of defaulting to light -
+   without this, e.g. the <input type="date"> calendar icon renders as a
+   near-invisible dark icon against the dark input background it's now
+   painted on. */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-base);
+}

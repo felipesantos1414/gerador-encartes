@@ -5,8 +5,8 @@ function ProductCard({ product, onEdit, onDelete }) {
   const [imgFailed, setImgFailed] = useState(false)
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex h-32 items-center justify-center bg-slate-100">
+    <div className="flex flex-col overflow-hidden rounded-xl border border-line bg-surface">
+      <div className="flex h-32 items-center justify-center bg-surface-hover">
         {product.imageUrl && !imgFailed ? (
           <img
             src={product.imageUrl}
@@ -15,32 +15,32 @@ function ProductCard({ product, onEdit, onDelete }) {
             onError={() => setImgFailed(true)}
           />
         ) : (
-          <span className="text-sm text-slate-400">Sem imagem</span>
+          <span className="text-sm text-ink-faint">Sem imagem</span>
         )}
       </div>
 
       <div className="flex flex-1 flex-col gap-1 p-3">
-        <span className="w-fit rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+        <span className="w-fit rounded-full bg-surface-hover px-2 py-0.5 text-xs font-medium text-ink-muted">
           {categoryLabel(product.category)}
         </span>
-        <h3 className="font-semibold text-slate-800">{product.name}</h3>
-        <p className="text-lg font-bold text-emerald-700">
+        <h3 className="font-semibold text-ink">{product.name}</h3>
+        <p className="text-lg font-bold text-accent">
           {currencyFormatter.format(product.price)}
-          <span className="ml-1 text-sm font-normal text-slate-500">/{product.unit}</span>
+          <span className="ml-1 text-sm font-normal text-ink-muted">/{product.unit}</span>
         </p>
 
         <div className="mt-auto flex gap-2 pt-2">
           <button
             type="button"
             onClick={() => onEdit(product)}
-            className="flex-1 rounded-lg border border-slate-300 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="flex-1 rounded-lg border border-line py-1.5 text-sm font-medium text-ink hover:bg-surface-hover"
           >
             Editar
           </button>
           <button
             type="button"
             onClick={() => onDelete(product)}
-            className="flex-1 rounded-lg border border-red-300 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50"
+            className="flex-1 rounded-lg border border-accent py-1.5 text-sm font-medium text-accent hover:bg-accent-soft"
           >
             Excluir
           </button>

@@ -61,14 +61,14 @@ function MeusEncartesPage({ onOpen }) {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
-      <h1 className="mb-4 text-2xl font-bold text-slate-800">Meus Encartes</h1>
+      <h1 className="mb-4 text-2xl font-bold text-ink">Meus Encartes</h1>
 
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {error && <p className="mb-4 text-sm text-accent">{error}</p>}
 
       {loading ? (
-        <p className="text-sm text-slate-500">Carregando...</p>
+        <p className="text-sm text-ink-muted">Carregando...</p>
       ) : flyers.length === 0 ? (
-        <p className="text-sm text-slate-500">Nenhum encarte salvo ainda.</p>
+        <p className="text-sm text-ink-muted">Nenhum encarte salvo ainda.</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {flyers.map((flyer) => {
@@ -78,15 +78,15 @@ function MeusEncartesPage({ onOpen }) {
             return (
               <li
                 key={flyer._id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface p-4"
               >
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="h-3 w-3 rounded-full" style={{ background: theme.colors.background }} />
-                    <h2 className="font-semibold text-slate-800">{flyer.title}</h2>
+                    <h2 className="font-semibold text-ink">{flyer.title}</h2>
                   </div>
-                  <p className="text-sm text-slate-500">{flyer.storeName}</p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-sm text-ink-muted">{flyer.storeName}</p>
+                  <p className="text-xs text-ink-faint">
                     {formatValidityRange(flyer.validFrom, flyer.validUntil)}
                   </p>
                 </div>
@@ -95,7 +95,7 @@ function MeusEncartesPage({ onOpen }) {
                   <button
                     type="button"
                     onClick={() => onOpen(flyer._id)}
-                    className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
+                    className="rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-hover"
                   >
                     Reabrir
                   </button>
@@ -103,7 +103,7 @@ function MeusEncartesPage({ onOpen }) {
                     type="button"
                     disabled={busy}
                     onClick={() => handleDuplicate(flyer)}
-                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                    className="rounded-lg border border-line px-3 py-1.5 text-sm font-medium text-ink hover:bg-surface-hover disabled:opacity-50"
                   >
                     Duplicar
                   </button>
@@ -111,7 +111,7 @@ function MeusEncartesPage({ onOpen }) {
                     type="button"
                     disabled={busy}
                     onClick={() => handleDelete(flyer)}
-                    className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                    className="rounded-lg border border-accent px-3 py-1.5 text-sm font-medium text-accent hover:bg-accent-soft disabled:opacity-50"
                   >
                     Excluir
                   </button>

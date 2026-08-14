@@ -87,19 +87,19 @@ function NovoEncartePage({ onSaved }) {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
-      <h1 className="mb-4 text-2xl font-bold text-slate-800">Novo Encarte</h1>
+      <h1 className="mb-4 text-2xl font-bold text-ink">Novo Encarte</h1>
 
       <ol className="mb-6 flex gap-4">
         {STEPS.map((label, i) => (
           <li
             key={label}
             className={`flex items-center gap-2 text-sm font-medium ${
-              step === i + 1 ? 'text-emerald-700' : 'text-slate-400'
+              step === i + 1 ? 'text-accent' : 'text-ink-faint'
             }`}
           >
             <span
               className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${
-                step === i + 1 ? 'bg-emerald-600 text-white' : 'bg-slate-200'
+                step === i + 1 ? 'bg-accent text-white' : 'bg-surface-hover text-ink-muted'
               }`}
             >
               {i + 1}
@@ -122,14 +122,14 @@ function NovoEncartePage({ onSaved }) {
           )}
           {step === 3 && <StepDados form={dados} onChange={(patch) => setDados((d) => ({ ...d, ...patch }))} />}
 
-          {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+          {error && <p className="mt-3 text-sm text-accent">{error}</p>}
 
           <div className="mt-6 flex gap-2">
             {step > 1 && (
               <button
                 type="button"
                 onClick={() => setStep((s) => s - 1)}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-lg border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-surface-hover"
               >
                 Voltar
               </button>
@@ -139,7 +139,7 @@ function NovoEncartePage({ onSaved }) {
                 type="button"
                 disabled={!canGoNext}
                 onClick={() => setStep((s) => s + 1)}
-                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
               >
                 Próximo
               </button>
@@ -149,7 +149,7 @@ function NovoEncartePage({ onSaved }) {
                 type="button"
                 disabled={!canSave || saving}
                 onClick={handleSave}
-                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
               >
                 {saving ? 'Salvando...' : 'Salvar encarte'}
               </button>
